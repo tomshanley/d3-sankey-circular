@@ -13,7 +13,7 @@
   <title>Sankey with circular links</title>
   <style>
     body {
-      /*font-family: 'Roboto', sans-serif;*/
+      font-family: 'Roboto', sans-serif;
       /*background: #E3D4C1;*/
       /*background: #000;*/
     }
@@ -44,10 +44,10 @@
 
   <script>
     var margin = { top: 150, right: 100, bottom: 130, left: 120 };
-    var width = 800;
+    var width = 1000;
     var height = 400;
 
-    let data = data4;
+    let data = data2;
 
     const nodePadding = 40;
 
@@ -56,7 +56,7 @@
     var sankey = d3.sankey()
       .nodeWidth(10)
       .nodePadding(nodePadding)
-      .nodePaddingRatio(0.8)
+      .nodePaddingRatio(0.5)
       .scale(0.5)
       .size([width, height])
       .nodeId(function (d) {
@@ -341,11 +341,11 @@
 
 
     //ARROWS
-    /*var arrowsG = linkG.data(sankeyLinks)
+    var arrowsG = linkG.data(sankeyLinks)
       .enter()
       .append("g")
       .attr("class", "g-arrow")
-      .call(appendArrows)*/
+      .call(appendArrows)
 
 
     function highlightNodes(node, name) {
