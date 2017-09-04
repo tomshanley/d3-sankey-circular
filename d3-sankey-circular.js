@@ -1,4 +1,5 @@
-// https://github.com/d3/d3-sankey Version 0.7.1. Copyright 2017 Mike Bostock.
+// https://github.com/tomshanley/d3-sankey-circular
+// fork of https://github.com/d3/d3-sankey copyright Mike Bostock
 ;(function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined'
     ? factory(
@@ -514,6 +515,8 @@
 
   /// /////////////////////////////////////////////////////////////////////////////////
   // Cycle functions
+
+  //portion of code to detect circular links based on Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043
 
   // Identify circles in the link objects
   function identifyCircles (graph) {
