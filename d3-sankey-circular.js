@@ -655,18 +655,12 @@
 
   // calculate the optimum path for a link to reduce overlaps
   function addCircularPathData (graph) {
-    let maxLinkWidth = d3.max(graph.links, function (link) {
-      return link.width
-    })
-    let minRadius = maxLinkWidth
-    let maxNodeDepth = d3.max(graph.links, function (link) {
-      return link.target.depth
-    })
-    let minY = d3.min(graph.links, function (link) {
-      return link.source.y0
-    })
 
-    let baseRadius = 10
+    let baseRadius = 10;
+    let buffer = 10;
+    let verticalMargin = 25;
+
+    let minY = d3.min(graph.links, function (link) { return link.source.y0 })
 
     // create object for circular Path Data
     graph.links.forEach(function (link) {
@@ -689,13 +683,12 @@
     // add the base data for each link
     graph.links.forEach(function (link) {
       if (link.circular) {
+
         link.circularPathData.arcRadius = link.width + baseRadius
-        link.circularPathData.leftNodeBuffer = 10
-        link.circularPathData.rightNodeBuffer = 10
+        link.circularPathData.leftNodeBuffer = buffer;
+        link.circularPathData.rightNodeBuffer = buffer;
         link.circularPathData.sourceWidth = link.source.x1 - link.source.x0
-        link.circularPathData.targetWidth = link.target.x1 - link.target.x0 // probably won't use
-        link.circularPathData.sourceX =
-          link.source.x0 + link.circularPathData.sourceWidth
+        link.circularPathData.sourceX = link.source.x0 + link.circularPathData.sourceWidth
         link.circularPathData.targetX = link.target.x0
         link.circularPathData.sourceY = link.y0
         link.circularPathData.targetY = link.y1
@@ -716,13 +709,11 @@
           sameDepthLinks.sort(sortLinkSourceYAscending)
         }
 
-        let radiusOffset = 0
+        let radiusOffset = 0;
         sameDepthLinks.forEach(function (l, i) {
           if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.leftSmallArcRadius =
-              baseRadius + link.width / 2 + radiusOffset
-            link.circularPathData.leftLargeArcRadius =
-              baseRadius + link.width / 2 + i * circularLinkGap + radiusOffset
+            link.circularPathData.leftSmallArcRadius = baseRadius + link.width/2 + radiusOffset
+            link.circularPathData.leftLargeArcRadius = baseRadius + link.width/2 + i * circularLinkGap + radiusOffset
           }
           radiusOffset = radiusOffset + l.width
         })
@@ -744,55 +735,34 @@
         radiusOffset = 0
         sameDepthLinks.forEach(function (l, i) {
           if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.rightSmallArcRadius =
-              baseRadius + link.width / 2 + radiusOffset
-            link.circularPathData.rightLargeArcRadius =
-              baseRadius + link.width / 2 + i * circularLinkGap + radiusOffset
+            link.circularPathData.rightSmallArcRadius = baseRadius + link.width/2 + radiusOffset
+            link.circularPathData.rightLargeArcRadius = baseRadius + link.width/2 + i * circularLinkGap + radiusOffset
           }
           radiusOffset = radiusOffset + l.width
         })
 
         // all links
-        link.circularPathData.leftInnerExtent =
-          link.circularPathData.sourceX + link.circularPathData.leftNodeBuffer
-        link.circularPathData.rightInnerExtent =
-          link.circularPathData.targetX - link.circularPathData.rightNodeBuffer
-        link.circularPathData.leftFullExtent =
-          link.circularPathData.sourceX +
-          link.circularPathData.leftLargeArcRadius +
-          link.circularPathData.leftNodeBuffer
-        link.circularPathData.rightFullExtent =
-          link.circularPathData.targetX -
-          link.circularPathData.rightLargeArcRadius -
-          link.circularPathData.rightNodeBuffer
+        link.circularPathData.leftInnerExtent = link.circularPathData.sourceX + link.circularPathData.leftNodeBuffer
+        link.circularPathData.rightInnerExtent = link.circularPathData.targetX - link.circularPathData.rightNodeBuffer
+        link.circularPathData.leftFullExtent = link.circularPathData.sourceX + link.circularPathData.leftLargeArcRadius + link.circularPathData.leftNodeBuffer
+        link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius - link.circularPathData.rightNodeBuffer
 
         // bottom links
         if (link.circularLinkType == 'bottom') {
-          link.circularPathData.verticalFullExtent =
-            height + 25 + link.circularPathData.verticalBuffer
-          link.circularPathData.verticalLeftInnerExtent =
-            link.circularPathData.verticalFullExtent -
-            link.circularPathData.leftLargeArcRadius
-          link.circularPathData.verticalRightInnerExtent =
-            link.circularPathData.verticalFullExtent -
-            link.circularPathData.rightLargeArcRadius
+          link.circularPathData.verticalFullExtent = height + verticalMargin + link.circularPathData.verticalBuffer
+          link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius
+          link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius
         } else {
           // top links
-          link.circularPathData.verticalFullExtent =
-            minY - 25 - link.circularPathData.verticalBuffer
-          link.circularPathData.verticalLeftInnerExtent =
-            link.circularPathData.verticalFullExtent +
-            link.circularPathData.leftLargeArcRadius
-          link.circularPathData.verticalRightInnerExtent =
-            link.circularPathData.verticalFullExtent +
-            link.circularPathData.rightLargeArcRadius
+          link.circularPathData.verticalFullExtent = minY - verticalMargin - link.circularPathData.verticalBuffer
+          link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.leftLargeArcRadius
+          link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.rightLargeArcRadius
         }
 
         link.circularPathData.path = createCircularPathString(link)
       }
     })
 
-    //return links
   }
 
   // create a d path using the addCircularPathData
@@ -1060,7 +1030,6 @@
         let i = 1
         let numberOfDepthsToTest = maxDepthToTest - depthToTest + 1
 
-
         for (
           depthToTest, (i = 1);
           depthToTest <= maxDepthToTest;
@@ -1079,10 +1048,6 @@
               let B1_t = 3 * t * Math.pow(1 - t, 2)
               let B2_t = 3 * Math.pow(t, 2) * (1 - t)
               let B3_t = Math.pow(t, 3)
-
-              // if you need x coord
-              // let controlX = (link.source.x1 + link.target.x0)/2;
-              // let px_t = (B0_t * link.source.x1) + (B1_t * controlX) + (B2_t * controlX) + (B3_t * link.target.x0)
 
               let py_t =
                 B0_t * link.y0 +
@@ -1387,8 +1352,8 @@
   }
 
   function incline (link) {
-    // positive = slopes up from source to target
-    // negative = slopes down from source to target
+    // positive => slopes up from source to target
+    // negative => slopes down from source to target
     return link.y0 - link.y1 > 0 ? 'up' : 'down'
   }
 
@@ -1399,8 +1364,110 @@
   exports.sankeyLeft = left
   exports.sankeyRight = right
   exports.sankeyJustify = justify
+  //exports.sankeyPath = sankeyPath
   // exports.sankeyLinkHorizontal = sankeyLinkHorizontal
   // exports.curveSankeyForceLink = curveSankeyForceLink
 
   Object.defineProperty(exports, '__esModule', { value: true })
 })
+
+var sankeyPath = function(link) {
+  let path = ''
+  if (link.circular) {
+    path = link.circularPathData.path
+  } else {
+    var normalPath = d3.linkHorizontal()
+      .source(function (d) {
+        let x = d.source.x0 + (d.source.x1 - d.source.x0)
+        let y = d.y0
+        return [x, y]
+      })
+      .target(function (d) {
+        let x = d.target.x0
+        let y = d.y1
+        return [x, y]
+      })
+    path = normalPath(link)
+  }
+  return path
+}
+
+
+function appendArrows(selection, arrowLength, gapLength, arrowHeadSize) {
+  
+        //let arrowLength = 20;
+        //let gapLength = 300;
+
+        let totalDashArrayLength = arrowLength + gapLength;
+  
+        arrows = selection.append("path")
+          .attr("d", sankeyPath)
+          .style("stroke-width", 1)
+          .style("stroke", "black")
+          .style("stroke-dasharray", arrowLength + "," + gapLength)
+  
+        arrows.each(function (arrow) {
+  
+          let thisPath = d3.select(this).node();
+          let parentG = d3.select(this.parentNode)
+          let pathLength = thisPath.getTotalLength();
+          let numberOfArrows = Math.ceil(pathLength / totalDashArrayLength);
+  
+          //remove the last arrow head if it will overlap the target node
+          //+4 to take into account arrow head size
+          if ((((numberOfArrows - 1) * totalDashArrayLength) + (arrowLength + 5)) > pathLength) {
+            numberOfArrows = numberOfArrows - 1;
+          }
+  
+          let arrowHeadData = d3.range(numberOfArrows).map(function (d, i) {
+            let length = (i * totalDashArrayLength) + arrowLength;
+  
+            let point = thisPath.getPointAtLength(length);
+            let previousPoint = thisPath.getPointAtLength(length - 2);
+  
+            let rotation = 0;
+  
+            if (point.y == previousPoint.y) {
+              rotation = (point.x < previousPoint.x) ? 180 : 0;
+            }
+            else if (point.x == previousPoint.x) {
+              rotation = (point.y < previousPoint.y) ? -90 : 90;
+            }
+            else {
+              let adj = Math.abs(point.x - previousPoint.x);
+              let opp = Math.abs(point.y - previousPoint.y);
+              let angle = Math.atan(opp / adj) * (180 / Math.PI);
+              if (point.x < previousPoint.x) {
+                angle = angle + ((90 - angle) * 2)
+              }
+              if (point.y < previousPoint.y) {
+                rotation = -angle;
+              }
+              else {
+                rotation = angle;
+              }
+            };
+  
+            return { x: point.x, y: point.y, rotation: rotation };
+  
+          });
+  
+          let arrowHeads = parentG.selectAll(".arrow-heads")
+            .data(arrowHeadData)
+            .enter()
+            .append("path")
+            .attr("d", function (d) {
+              return "M" + (d.x) + "," + (d.y - (arrowHeadSize/2)) + " "
+                + "L" + (d.x + arrowHeadSize) + "," + (d.y) + " "
+                + "L" + d.x + "," + (d.y + (arrowHeadSize/2));
+            })
+            .attr("class", "arrow-head")
+            .attr("transform", function (d) {
+              return "rotate(" + d.rotation + "," + d.x + "," + d.y + ")";
+  
+            })
+            .style("fill", "black")
+  
+        });
+  
+      }
