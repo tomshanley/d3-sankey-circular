@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="../d3-sankey-circular.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="example-data.js"></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100i" rel="stylesheet">
+
+  <title>Sankey with circular links</title>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #E3D4C1;
+      /*background: #000;*/
+    }
+
+    rect {
+      shape-rendering: crispEdges;
+    }
+
+    text {
+      /*text-shadow: 0 1px 0 #fff;*/
+      font-size: 12px;
+      font-family: 'Roboto', sans-serif;
+      /*font-family: monospace;*/
+      /*fill: white;*/
+    }
+
+    .link {
+      fill: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Sankey with circular links</h1>
+
+  <div id="chart"></div>
+
+  <script>
+    var margin = { top: 150, right: 100, bottom: 130, left: 120 };
+    var width = 1000;
+    var height = 400;
+
+    let data = data2;
+
+    const nodePadding = 40;
+
+    const circularLinkGap = 2;
+
+    var sankey = d3.sankey()
+      .nodeWidth(2)
+      .nodePadding(nodePadding)
+      .nodePaddingRatio(0.5)
+      .scale(0.5)
+      .size([width, height])
+      .nodeId(function (d) {
+        return d.name;
+      })
+      .nodeAlign(d3.sankeyJustify)
+      .iterations(32);
+
+    var svg = d3.select("#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+
+    var g = svg.append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+    var linkG = g.append("g")
+      .attr("class", "links")
+      .attr("fill", "none")
+      .attr("stroke-opacity", 0.2)
+      .selectAll("path");
+
+    var nodeG = g.append("g")
+      .attr("class", "nodes")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .selectAll("g");
+
+    //run the Sankey + circular over the data
+    let sankeyData = sankey(data);
+    let sankeyNodes = sankeyData.nodes;
+    let sankeyLinks = sankeyData.links;
+
+    let depthExtent = d3.extent(sankeyNodes, function (d) { return d.depth; });
+
+    //var nodeColour = d3.scaleSequential(d3.interpolateCool)
+    //.domain([depthExtent]);
+
+    var nodeColour = d3.scaleSequential(d3.interpolateCool)
+    .domain([0,width]);
+
+    //var colourTop = d3.scaleOrdinal(d3.interpolateMagma)
+    //var colourBottom = d3.scaleOrdinal(d3.schemeRdYlBu[9]);
+    
+    //Adjust link Y coordinates based on target/source Y positions
+
+    var node = nodeG.data(sankeyNodes)
+      .enter()
+      .append("g");
+
+    node.append("rect")
+      .attr("x", function (d) { return d.x0; })
+      .attr("y", function (d) { return d.y0; })
+      .attr("height", function (d) { return d.y1 - d.y0; })
+      .attr("width", function (d) { return d.x1 - d.x0; })
+      //.style("fill", function (d) { return nodeColour(d.x0); })
+      .style("fill", "black")
+      .style("opacity", 0.5)
+      //.style("stroke", "black")
+      .on("mouseover", function (d) {
+
+        let thisName = d.name;
+
+        node.selectAll("rect")
+          .style("opacity", function (d) {
+            return highlightNodes(d, thisName)
+          })
+
+        d3.selectAll(".sankey-link")
+          .style("opacity", function (l) {
+            return l.source.name == thisName || l.target.name == thisName ? 1 : 0.3;
+          })
+
+        node.selectAll("text")
+          .style("opacity", function (d) {
+            return highlightNodes(d, thisName)
+          })
+      })
+      .on("mouseout", function (d) {
+        d3.selectAll("rect").style("opacity", 0.5);
+        d3.selectAll(".sankey-link").style("opacity", 0.7);
+        d3.selectAll("text").style("opacity", 1);
+      })
+
+    /*node.append("text")
+      .attr("x", function (d) { return d.x0 - 6; })
+      .attr("y", function (d) { return d.y0 + ((d.y1 - d.y0) / 2); })
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "end")
+      .text(function (d) { return d.name; })
+      .filter(function (d) { return (d.x0 < width / 2) && (d.depth != 0); })
+      .attr("x", function (d) { return d.x1 + 6; })
+      .attr("text-anchor", "start")*/
+
+    node.append("text")
+      .attr("x", function (d) { return (d.x0 + d.x1) / 2; })
+      .attr("y", function (d) { return d.y0 - 12; })
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .text(function (d) { return d.name; });
+
+    node.append("title")
+      .text(function (d) { return d.name + "\n" + (d.value); });
+
+    var link = linkG.data(sankeyLinks)
+      .enter()
+      .append("g")
+    
+    link.append("path") 
+      .attr("class", "sankey-link")
+      .attr("d", sankeyPath)
+      .style("stroke-width", function (d) { return Math.max(1, d.width); })
+      .style("opacity", 0.7)
+      .style("stroke", function (link, i) {
+        return link.circular ? "red" : "black"
+      })
+      /*.style("stroke", function (link, i) {
+        if (!link.circular) { return "#988682" }
+        else {
+          return link.circularLinkType == "top" ? colourTop(i) : colourBottom(i)
+        }
+      })*/
+
+    //link.filter(function(l){ return l.circular == true }).selectAll("path").remove()
+    //link.filter(function(l){ return l.circular == true }).selectAll("path").style("opacity", 0.1)
+     /* if (link.circular) {
+
+        let thisPath = d3.select(this).node();
+        let pathLength = thisPath.getTotalLength();
+
+        let dash = pathLength * 0.1;
+        let gap = pathLength * 0.8;
+
+        return dash + "," + gap;
+      };
+    })*/
+
+    /*link.filter(function(l){ return l.circular == true })
+      .append("path")
+      .attr("d", function(l){
+        let pathString = ""
+        if (l.circularLinkType == 'top') {
+      pathString =
+      'M' +
+        l.circularPathData.rightFullExtent +
+        ' ' +
+        "-20" + " " +  
+      'L' +
+        l.circularPathData.rightFullExtent +
+        ' ' +
+        (l.circularPathData.targetY -
+          l.circularPathData.rightSmallArcRadius) +
+        ' ' +
+        // Arc around: Centre of arc X and  //Centre of arc Y
+        'A' +
+        l.circularPathData.rightLargeArcRadius +
+        ' ' +
+        l.circularPathData.rightSmallArcRadius +
+        ' 0 0 0 ' +
+        // End of arc X //End of arc Y
+        l.circularPathData.rightInnerExtent +
+        ' ' +
+        l.circularPathData.targetY +
+        ' ' + // End of arc X
+        // line to end
+        'L' +
+        l.circularPathData.targetX +
+        ' ' +
+        l.circularPathData.targetY
+        } else {
+          pathString =
+          'M' +
+        l.circularPathData.rightFullExtent +
+        ' ' +
+        (height + 20) + " " + 
+
+          'L' +
+          l.circularPathData.rightFullExtent +
+          ' ' +
+          (l.circularPathData.targetY +
+            l.circularPathData.rightSmallArcRadius) +
+          ' ' +
+          // Arc around: Centre of arc X and  //Centre of arc Y
+          'A' +
+          l.circularPathData.rightLargeArcRadius +
+          ' ' +
+          l.circularPathData.rightSmallArcRadius +
+          ' 0 0 1 ' +
+          // End of arc X //End of arc Y
+          l.circularPathData.rightInnerExtent +
+          ' ' +
+          l.circularPathData.targetY +
+          ' ' + // End of arc X
+          // line to end
+          'L' +
+          l.circularPathData.targetX +
+          ' ' +
+          l.circularPathData.targetY
+        }
+        return pathString
+      })
+      .style("stroke-width", function (d) { return Math.max(1, d.width); })
+      .style("opacity", 0.7);
+
+    link.filter(function(l){ return l.circular == true })
+      .append("path")
+      .attr("d", function(l){
+        let pathString = ""
+        if (l.circularLinkType == 'top') {
+      pathString =
+        // start at the right of the source node
+        'M' +
+        l.circularPathData.sourceX +
+        ' ' +
+        l.circularPathData.sourceY +
+        ' ' +
+        // line right to buffer point
+        'L' +
+        l.circularPathData.leftInnerExtent +
+        ' ' +
+        l.circularPathData.sourceY +
+        ' ' +
+        // Arc around: Centre of arc X and  //Centre of arc Y
+        'A' +
+        l.circularPathData.leftLargeArcRadius +
+        ' ' +
+        l.circularPathData.leftSmallArcRadius +
+        ' 0 0 0 ' +
+        // End of arc X //End of arc Y
+        l.circularPathData.leftFullExtent +
+        ' ' +
+        (l.circularPathData.sourceY -
+          l.circularPathData.leftSmallArcRadius) +
+        ' ' + // End of arc X
+        // line up to buffer point
+        'L' +
+        l.circularPathData.leftFullExtent +
+        ' ' +
+        "-20"
+        } else {
+          pathString =
+        // start at the right of the source node
+        'M' +
+        l.circularPathData.sourceX +
+        ' ' +
+        l.circularPathData.sourceY +
+        ' ' +
+        // line right to buffer point
+        'L' +
+        l.circularPathData.leftInnerExtent +
+        ' ' +
+        l.circularPathData.sourceY +
+        ' ' +
+        // Arc around: Centre of arc X and  //Centre of arc Y
+        'A' +
+        l.circularPathData.leftLargeArcRadius +
+        ' ' +
+        l.circularPathData.leftSmallArcRadius +
+        ' 0 0 1 ' +
+        // End of arc X //End of arc Y
+        l.circularPathData.leftFullExtent +
+        ' ' +
+        (l.circularPathData.sourceY +
+          l.circularPathData.leftSmallArcRadius) +
+        ' ' + // End of arc X
+        // line down to buffer point
+        'L' +
+        l.circularPathData.leftFullExtent +
+        ' ' +
+        (height + 20)
+        }
+        return pathString
+      })
+      .style("stroke-width", function (d) { return Math.max(1, d.width); })
+      .style("opacity", 0.7);*/
+
+    
+
+    link.append("title")
+      .text(function (d) {
+        return d.source.name + " → " + d.target.name + "\n Index: " + (d.index);
+      });
+
+
+    //ARROWS
+    var arrowsG = linkG.data(sankeyLinks)
+      .enter()
+      .append("g")
+      .attr("class", "g-arrow")
+      .call(appendArrows)
+
+
+    function highlightNodes(node, name) {
+
+      let opacity = 0.3
+
+      if (node.name == name) {
+        opacity = 1;
+      }
+      node.sourceLinks.forEach(function (link) {
+        if (link.target.name == name) {
+          opacity = 1;
+        };
+      })
+      node.targetLinks.forEach(function (link) {
+        if (link.source.name == name) {
+          opacity = 1;
+        };
+      })
+
+      return opacity;
+
+    }
+
+
+    function sankeyPath(link) {
+      let path = ''
+      if (link.circular) {
+        path = link.circularPathData.path
+      } else {
+        var normalPath = d3
+          .linkHorizontal()
+          .source(function (d) {
+            let x = d.source.x0 + (d.source.x1 - d.source.x0)
+            let y = d.y0
+            return [x, y]
+          })
+          .target(function (d) {
+            let x = d.target.x0
+            let y = d.y1
+            return [x, y]
+          })
+        path = normalPath(link)
+      }
+      return path
+    }
+
+
+    function appendArrows(linkG) {
+
+      let arrowLength = 20;
+      let gapLength = 300;
+      let totalDashArrayLength = arrowLength + gapLength;
+
+      arrows = linkG.append("path")
+        .attr("d", sankeyPath)
+        .style("stroke-width", 1)
+        .style("stroke", "black")
+        .style("stroke-dasharray", arrowLength + "," + gapLength)
+
+      arrows.each(function (arrow) {
+
+        let thisPath = d3.select(this).node();
+        let parentG = d3.select(this.parentNode)
+        let pathLength = thisPath.getTotalLength();
+        let numberOfArrows = Math.ceil(pathLength / totalDashArrayLength);
+
+        //remove the last arrow head if it will overlap the target node
+        //+4 to take into account arrow head size
+        if ((((numberOfArrows - 1) * totalDashArrayLength) + (arrowLength + 5)) > pathLength) {
+          numberOfArrows = numberOfArrows - 1;
+        }
+
+        let arrowHeadData = d3.range(numberOfArrows).map(function (d, i) {
+          let length = (i * totalDashArrayLength) + arrowLength;
+
+          let point = thisPath.getPointAtLength(length);
+          let previousPoint = thisPath.getPointAtLength(length - 2);
+
+          let rotation = 0;
+
+          if (point.y == previousPoint.y) {
+            rotation = (point.x < previousPoint.x) ? 180 : 0;
+          }
+          else if (point.x == previousPoint.x) {
+            rotation = (point.y < previousPoint.y) ? -90 : 90;
+          }
+          else {
+            let adj = Math.abs(point.x - previousPoint.x);
+            let opp = Math.abs(point.y - previousPoint.y);
+            let angle = Math.atan(opp / adj) * (180 / Math.PI);
+            if (point.x < previousPoint.x) {
+              angle = angle + ((90 - angle) * 2)
+            }
+            if (point.y < previousPoint.y) {
+              rotation = -angle;
+            }
+            else {
+              rotation = angle;
+            }
+          };
+
+          return { x: point.x, y: point.y, rotation: rotation };
+
+        });
+
+        let arrowHeads = parentG.selectAll(".arrow-heads")
+          .data(arrowHeadData)
+          .enter()
+          .append("path")
+          .attr("d", function (d) {
+            return "M" + (d.x) + "," + (d.y - 2) + " "
+              + "L" + (d.x + 4) + "," + (d.y) + " "
+              + "L" + d.x + "," + (d.y + 2);
+          })
+          .attr("class", "arrow-head")
+          .attr("transform", function (d) {
+            return "rotate(" + d.rotation + "," + d.x + "," + d.y + ")";
+
+          })
+          .style("fill", "black")
+
+      });
+
+    }
+  </script>
+</body>
+
+</html>
