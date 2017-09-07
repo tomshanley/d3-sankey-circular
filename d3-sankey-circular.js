@@ -140,19 +140,19 @@
       computeNodeBreadths(graph, iterations)
       computeLinkBreadths(graph)
 
-      //sort links per node, based on the links' source/target positions
+      // sort links per node, based on the links' source/target positions
       sortSourceLinks(graph)
       sortTargetLinks(graph)
-      
-      //adjust nodes that overlap links that span 2+ depths
-      resolveNodeLinkOverlaps(graph)
 
-      //sort links per node, based on the links' source/target positions
+      // adjust nodes that overlap links that span 2+ columns
+      resolveNodeLinkOverlaps(graph, y1)
+
+      // sort links per node, based on the links' source/target positions
       sortSourceLinks(graph)
       sortTargetLinks(graph)
-  
-      //add d string for circular paths
-      addCircularPathData(graph);
+
+      // add d string for circular paths
+      addCircularPathData(graph)
 
       return graph
     }
@@ -304,16 +304,12 @@
         })
       }
 
-      var kx = (x1 - x0 - dx) / (x - 1)
+      var kx = (x1 - x0 - dx) / (x - 1);
+
       graph.nodes.forEach(function (node) {
-        node.x1 =
-          (node.x0 =
-            x0 +
-            Math.max(
-              0,
-              Math.min(x - 1, Math.floor(align.call(null, node, x)))
-            ) *
-              kx) + dx
+        node.column = Math.floor(align.call(null, node, x));
+        node.x0 = x0 + Math.max(0, Math.min(x - 1, Math.floor(align.call(null, node, x)))) * kx;
+        node.x1 = node.x0 + dx;
       })
     }
 
@@ -333,10 +329,6 @@
       resolveCollisions()
 
       for (var alpha = 1, n = iterations; n > 0; --n) {
-        // relaxRightToLeft((alpha *= 0.99))
-        // resolveCollisions()
-        // relaxLeftToRight((alpha *= 0.99))
-        // resolveCollisions()
         relaxLeftAndRight((alpha *= 0.99))
         resolveCollisions()
       }
@@ -359,15 +351,18 @@
           var nodesLength = nodes.length
           nodes.forEach(function (node, i) {
             if (node.partOfCycle) {
-              if (node.circularLinkType == 'top') {
+              if (numberOfNonSelfLinkingCycles(node) == 0) {
+                node.y0 = y1/2 + i
+                node.y1 = node.y0 + node.value * ky
+              }
+              else if (node.circularLinkType == 'top') {
                 node.y0 = y0 + i
                 node.y1 = node.y0 + node.value * ky
               } else {
-                node.y0 = y1 - (node.value * ky) - i
+                node.y0 = y1 - node.value * ky - i
                 node.y1 = node.y0 + node.value * ky
               }
             } else {
-              // node.y1 = (node.y0 = i) + node.value * ky
               node.y0 = (y1 - y0) / 2 - nodesLength / 2 + i
               node.y1 = node.y0 + node.value * ky
             }
@@ -381,22 +376,16 @@
 
       function relaxLeftAndRight (alpha) {
         let columnsLength = columns.length
-        // console.log("cols: " + columnsLength);
 
         columns.forEach(function (nodes, i) {
           let n = nodes.length
           let depth = nodes[0].depth
 
-          // console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-
-          // console.log(depth + ': ' + n)
-
           nodes.forEach(function (node) {
-
             // check the node is not an orphan
             if (node.sourceLinks.length || node.targetLinks.length) {
-              if (node.partOfCycle /*&& n > 1 /* && depth != 0 */) {
-                // console.log('do nothing')
+              if (node.partOfCycle && numberOfNonSelfLinkingCycles(node) > 0) {
+                console.log(node.name + " " + node.y0)
               } else if (depth == 0 && n == 1) {
                 let nodeHeight = node.y1 - node.y0
 
@@ -426,14 +415,10 @@
                 }
 
                 let dy = (avg - nodeCenter(node)) * alpha
-
                 // positive if it node needs to move down
-                // let dy = (nodeCenter(node.sourceLinks[0].target) - nodeCenter(node.sourceLinks[0].source) / 2) * alpha;
-
                 node.y0 += dy
                 node.y1 += dy
 
-                // console.log('after: ' + node.y0 + ' ' + node.y1)
               }
             }
           })
@@ -441,17 +426,16 @@
       }
 
       function resolveCollisions () {
-        
         columns.forEach(function (nodes) {
           var node, dy, y = y0, n = nodes.length, i
 
           // Push any overlapping nodes down.
           nodes.sort(ascendingBreadth)
-          
+
           for (i = 0; i < n; ++i) {
             node = nodes[i]
             dy = y - node.y0
-            
+
             if (dy > 0) {
               node.y0 += dy
               node.y1 += dy
@@ -472,6 +456,9 @@
               y = node.y0
             }
           }
+
+          console.log(node.name + " " + node.y0)
+
         })
       }
     }
@@ -515,8 +502,7 @@
 
   /// /////////////////////////////////////////////////////////////////////////////////
   // Cycle functions
-
-  //portion of code to detect circular links based on Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043
+  // portion of code to detect circular links based on Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043
 
   // Identify circles in the link objects
   function identifyCircles (graph) {
@@ -572,6 +558,11 @@
       return false
     }
 
+    // Check for self linking nodes
+    if (originalSource.name == nodeToCheck.name) {
+      return true
+    }
+
     var nextLinks = findLinksOutward(nodeToCheck, graph)
     // leaf node check
     if (nextLinks.length == 0) {
@@ -596,8 +587,7 @@
     return false
   }
 
-  /* Given a node, find all links for which this is a source
-     in the current 'known' graph  */
+  // Given a node, find all links for which this is a source in the current 'known' graph
   function findLinksOutward (node, graph) {
     var children = []
 
@@ -610,9 +600,6 @@
     return children
   }
 
-  // Create a normal curve or circular curve
-  //var curveSankeyForceLink = 
-
   // Return the angle between a straight line between the source and target of the link, and the vertical plane of the node
   function linkAngle (link) {
     let adjacent = Math.abs(link.y1 - link.y0)
@@ -622,32 +609,73 @@
   }
 
   function circularLinksCross (link1, link2) {
-    if (link1.source.depth < link2.target.depth) {
+    if (link1.source.column < link2.target.column) {
       return false
-    } else if (link1.target.depth > link2.source.depth) {
+    } else if (link1.target.column > link2.source.column) {
       return false
     } else {
       return true
     }
   }
 
+  function numberOfNonSelfLinkingCycles(node) {
+    
+    let sourceCount = 0
+    node.sourceLinks.forEach(function (l) {
+      sourceCount = l.circular && !selfLinking(l) ? sourceCount + 1 : sourceCount
+    })
+
+    let targetCount = 0
+    node.targetLinks.forEach(function (l) {
+      targetCount = l.circular && !selfLinking(l) ? targetCount + 1 : targetCount
+    })
+
+    return sourceCount + targetCount;
+
+  }
+
+  function onlyCircularLink (link) {
+    let nodeSourceLinks = link.source.sourceLinks
+    let sourceCount = 0
+    nodeSourceLinks.forEach(function (l) {
+      sourceCount = l.circular ? sourceCount + 1 : sourceCount
+    })
+
+    let nodeTargetLinks = link.target.targetLinks
+    let targetCount = 0
+    nodeTargetLinks.forEach(function (l) {
+      targetCount = l.circular ? targetCount + 1 : targetCount
+    })
+
+    if (sourceCount > 1 || targetCount > 1) {
+      return false
+    } else {
+      return true
+    }
+  }
+
+  // creates vertical buffer valeus per set of top/bottom links
   function calcVerticalBuffer (links) {
-    links.sort(sortLinkDepthAscending)
+    links.sort(sortLinkColumnAscending)
     links.forEach(function (link, i) {
       let buffer = 0
 
-      let j = 0
-      for (j; j < i; j++) {
-        if (circularLinksCross(links[i], links[j])) {
-          let bufferOverThisLink =
-            links[j].circularPathData.verticalBuffer +
-            links[j].width / 2 +
-            circularLinkGap
-          buffer = bufferOverThisLink > buffer ? bufferOverThisLink : buffer
+      if (selfLinking(link) && onlyCircularLink(link)) {
+        link.circularPathData.verticalBuffer = buffer + link.width / 2
+      } else {
+        let j = 0
+        for (j; j < i; j++) {
+          if (circularLinksCross(links[i], links[j])) {
+            let bufferOverThisLink =
+              links[j].circularPathData.verticalBuffer +
+              links[j].width / 2 +
+              circularLinkGap
+            buffer = bufferOverThisLink > buffer ? bufferOverThisLink : buffer
+          }
         }
-      }
 
-      link.circularPathData.verticalBuffer = buffer + link.width / 2
+        link.circularPathData.verticalBuffer = buffer + link.width / 2
+      }
     })
 
     return links
@@ -655,12 +683,13 @@
 
   // calculate the optimum path for a link to reduce overlaps
   function addCircularPathData (graph) {
+    let baseRadius = 10
+    let buffer = 10
+    let verticalMargin = 25
 
-    let baseRadius = 10;
-    let buffer = 10;
-    let verticalMargin = 25;
-
-    let minY = d3.min(graph.links, function (link) { return link.source.y0 })
+    let minY = d3.min(graph.links, function (link) {
+      return link.source.y0
+    })
 
     // create object for circular Path Data
     graph.links.forEach(function (link) {
@@ -683,86 +712,108 @@
     // add the base data for each link
     graph.links.forEach(function (link) {
       if (link.circular) {
-
         link.circularPathData.arcRadius = link.width + baseRadius
-        link.circularPathData.leftNodeBuffer = buffer;
-        link.circularPathData.rightNodeBuffer = buffer;
+        link.circularPathData.leftNodeBuffer = buffer
+        link.circularPathData.rightNodeBuffer = buffer
         link.circularPathData.sourceWidth = link.source.x1 - link.source.x0
         link.circularPathData.sourceX = link.source.x0 + link.circularPathData.sourceWidth
         link.circularPathData.targetX = link.target.x0
         link.circularPathData.sourceY = link.y0
         link.circularPathData.targetY = link.y1
 
-        // add left extent coordinates, based on links with same source depth and circularLink type
-        let thisDepth = link.source.depth
-        let thisCircularLinkType = link.circularLinkType
-        let sameDepthLinks = graph.links.filter(function (l) {
-          return (
-            l.source.depth == thisDepth &&
-            l.circularLinkType == thisCircularLinkType
-          )
-        })
+        // for self linking paths, and that the only circular link in/out of that node
+        if (selfLinking(link) && onlyCircularLink(link)) {
+          link.circularPathData.leftSmallArcRadius = baseRadius + link.width / 2
+          link.circularPathData.leftLargeArcRadius = baseRadius + link.width / 2
+          link.circularPathData.rightSmallArcRadius = baseRadius + link.width / 2
+          link.circularPathData.rightLargeArcRadius = baseRadius + link.width / 2
 
-        if (link.circularLinkType == 'bottom') {
-          sameDepthLinks.sort(sortLinkSourceYDescending)
-        } else {
-          sameDepthLinks.sort(sortLinkSourceYAscending)
+          if (link.circularLinkType == 'bottom') {
+            link.circularPathData.verticalFullExtent = link.source.y1 + verticalMargin + link.circularPathData.verticalBuffer
+            link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius
+            link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius
+          } else {
+            // top links
+            link.circularPathData.verticalFullExtent = link.source.y0 - verticalMargin - link.circularPathData.verticalBuffer
+            link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.leftLargeArcRadius
+            link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.rightLargeArcRadius
+          }
         }
 
-        let radiusOffset = 0;
-        sameDepthLinks.forEach(function (l, i) {
-          if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.leftSmallArcRadius = baseRadius + link.width/2 + radiusOffset
-            link.circularPathData.leftLargeArcRadius = baseRadius + link.width/2 + i * circularLinkGap + radiusOffset
-          }
-          radiusOffset = radiusOffset + l.width
-        })
+        // else calculate normally
+        else {
+          
+          // add left extent coordinates, based on links with same source column and circularLink type
+          let thisColumn = link.source.column
+          let thisCircularLinkType = link.circularLinkType
+          let sameColumnLinks = graph.links.filter(function (l) {
+            return (
+              l.source.column == thisColumn &&
+              l.circularLinkType == thisCircularLinkType
+            )
+          })
 
-        // add right extent coordinates, based on links with same target depth and circularLink type
-        thisDepth = link.target.depth
-        sameDepthLinks = graph.links.filter(function (l) {
-          return (
-            l.target.depth == thisDepth &&
-            l.circularLinkType == thisCircularLinkType
-          )
-        })
-        if (link.circularLinkType == 'bottom') {
-          sameDepthLinks.sort(sortLinkTargetYDescending)
-        } else {
-          sameDepthLinks.sort(sortLinkTargetYAscending)
+          if (link.circularLinkType == 'bottom') {
+            sameColumnLinks.sort(sortLinkSourceYDescending)
+          } else {
+            sameColumnLinks.sort(sortLinkSourceYAscending)
+          }
+
+          let radiusOffset = 0
+          sameColumnLinks.forEach(function (l, i) {
+            if (l.circularLinkID == link.circularLinkID) {
+              link.circularPathData.leftSmallArcRadius = baseRadius + link.width / 2 + radiusOffset
+              link.circularPathData.leftLargeArcRadius = baseRadius + link.width / 2 + i * circularLinkGap + radiusOffset
+            }
+            radiusOffset = radiusOffset + l.width
+          })
+
+          // add right extent coordinates, based on links with same target column and circularLink type
+          thisColumn = link.target.column
+          sameColumnLinks = graph.links.filter(function (l) {
+            return (
+              l.target.column == thisColumn &&
+              l.circularLinkType == thisCircularLinkType
+            )
+          })
+          if (link.circularLinkType == 'bottom') {
+            sameColumnLinks.sort(sortLinkTargetYDescending)
+          } else {
+            sameColumnLinks.sort(sortLinkTargetYAscending)
+          }
+
+          radiusOffset = 0
+          sameColumnLinks.forEach(function (l, i) {
+            if (l.circularLinkID == link.circularLinkID) {
+              link.circularPathData.rightSmallArcRadius = baseRadius + link.width / 2 + radiusOffset
+              link.circularPathData.rightLargeArcRadius = baseRadius + link.width / 2 + i * circularLinkGap + radiusOffset
+            }
+            radiusOffset = radiusOffset + l.width
+          })
+
+          // bottom links
+          if (link.circularLinkType == 'bottom') {
+            link.circularPathData.verticalFullExtent = height + verticalMargin + link.circularPathData.verticalBuffer
+            link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius
+            link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius
+          } else {
+            // top links
+            link.circularPathData.verticalFullExtent = minY - verticalMargin - link.circularPathData.verticalBuffer
+            link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.leftLargeArcRadius
+            link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.rightLargeArcRadius
+          }
+        
         }
-
-        radiusOffset = 0
-        sameDepthLinks.forEach(function (l, i) {
-          if (l.circularLinkID == link.circularLinkID) {
-            link.circularPathData.rightSmallArcRadius = baseRadius + link.width/2 + radiusOffset
-            link.circularPathData.rightLargeArcRadius = baseRadius + link.width/2 + i * circularLinkGap + radiusOffset
-          }
-          radiusOffset = radiusOffset + l.width
-        })
 
         // all links
         link.circularPathData.leftInnerExtent = link.circularPathData.sourceX + link.circularPathData.leftNodeBuffer
         link.circularPathData.rightInnerExtent = link.circularPathData.targetX - link.circularPathData.rightNodeBuffer
         link.circularPathData.leftFullExtent = link.circularPathData.sourceX + link.circularPathData.leftLargeArcRadius + link.circularPathData.leftNodeBuffer
-        link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius - link.circularPathData.rightNodeBuffer
-
-        // bottom links
-        if (link.circularLinkType == 'bottom') {
-          link.circularPathData.verticalFullExtent = height + verticalMargin + link.circularPathData.verticalBuffer
-          link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius
-          link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius
-        } else {
-          // top links
-          link.circularPathData.verticalFullExtent = minY - verticalMargin - link.circularPathData.verticalBuffer
-          link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.leftLargeArcRadius
-          link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent + link.circularPathData.rightLargeArcRadius
-        }
+        link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius -link.circularPathData.rightNodeBuffer
 
         link.circularPathData.path = createCircularPathString(link)
       }
     })
-
   }
 
   // create a d path using the addCircularPathData
@@ -942,16 +993,15 @@
     return pathString
   }
 
-  // sort links based on the distance between the source and tartget node depths
+  // sort links based on the distance between the source and tartget node columns
   // if the same, then use Y position of the source node
-  function sortLinkDepthAscending (link1, link2) {
-    if (linkDepthDistance(link1) == linkDepthDistance(link2)) {
+  function sortLinkColumnAscending (link1, link2) {
+    if (linkColumnDistance(link1) == linkColumnDistance(link2)) {
       return link1.circularLinkType == 'bottom'
         ? sortLinkSourceYDescending(link1, link2)
         : sortLinkSourceYAscending(link1, link2)
     } else {
-      // return linkDepthDistance(link1) - linkDepthDistance(link2);
-      return linkDepthDistance(link2) - linkDepthDistance(link1)
+      return linkColumnDistance(link2) - linkColumnDistance(link1)
     }
   }
 
@@ -971,9 +1021,9 @@
     return link2.y1 - link1.y1
   }
 
-  // return the distance between the link's target and source node, in terms of the nodes' depth
-  function linkDepthDistance (link) {
-    return link.target.depth - link.source.depth
+  // return the distance between the link's target and source node, in terms of the nodes' column
+  function linkColumnDistance (link) {
+    return link.target.column - link.source.column
   }
 
   // return the distance between the link's target and source node, in terms of the nodes' X coordinate
@@ -1017,29 +1067,27 @@
     return yPerpendicular
   }
 
-  function resolveNodeLinkOverlaps (graph) {
+  function resolveNodeLinkOverlaps (graph, y1) {
     graph.links.forEach(function (link) {
       if (link.circular) {
         return
       }
 
-      if (link.target.depth - link.source.depth > 1) {
-        let depthToTest = link.source.depth + 1
-        let maxDepthToTest = link.target.depth - 1
+      if (link.target.column - link.source.column > 1) {
+        let columnToTest = link.source.column + 1
+        let maxColumnToTest = link.target.column - 1
 
         let i = 1
-        let numberOfDepthsToTest = maxDepthToTest - depthToTest + 1
+        let numberOfColumnsToTest = maxColumnToTest - columnToTest + 1
 
         for (
-          depthToTest, (i = 1);
-          depthToTest <= maxDepthToTest;
-          depthToTest++, i++
+          columnToTest, (i = 1);
+          columnToTest <= maxColumnToTest;
+          columnToTest++, i++
         ) {
-
           graph.nodes.forEach(function (node) {
-            if (node.depth == depthToTest) {
-
-              let t = i / (numberOfDepthsToTest + 1)
+            if (node.column == columnToTest) {
+              let t = i / (numberOfColumnsToTest + 1)
 
               // Find all the points of a cubic bezier curve in javascript
               // https://stackoverflow.com/questions/15397596/find-all-the-points-of-a-cubic-bezier-curve-in-javascript
@@ -1055,69 +1103,70 @@
                 B2_t * link.y1 +
                 B3_t * link.y1
 
-              let linkY0AtDepth = py_t - link.width / 2
-              let linkY1AtDepth = py_t + link.width / 2
+              let linkY0AtColumn = py_t - link.width / 2
+              let linkY1AtColumn = py_t + link.width / 2
 
               // If top of link overlaps node, push node up
-              if (linkY0AtDepth > node.y0 && linkY0AtDepth < node.y1) {
-                // console.log("OVERLAP!")
+              if (linkY0AtColumn > node.y0 && linkY0AtColumn < node.y1) {
 
-                let dy = -(node.y1 - linkY0AtDepth + 10)
+                let dy = node.y1 - linkY0AtColumn + 10
+                dy = node.circularLinkType == "bottom" ? dy : -dy;
 
-                node = adjustNodeHeight(node, dy);
+                node = adjustNodeHeight(node, dy, y1)
 
-                //check if other nodes need to move up too
-                graph.nodes.forEach(function(otherNode) {
-                  
-                  //don't need to check itself or nodes at different depths
-                  if ((otherNode.name == node.name) || (otherNode.depth != node.depth)) { return }
+                console.log(node.name + " " + node.y0)
+
+                // check if other nodes need to move up too
+                graph.nodes.forEach(function (otherNode) {
+                  // don't need to check itself or nodes at different columns
+                  if (
+                    otherNode.name == node.name ||
+                    otherNode.column != node.column
+                  ) {
+                    return
+                  }
                   if (nodesOverlap(node, otherNode)) {
-
-                    adjustNodeHeight(otherNode, dy)
-
+                    adjustNodeHeight(otherNode, dy, y1)
                   }
-                  
                 })
-
-              } else if (linkY1AtDepth > node.y0 && linkY1AtDepth < node.y1) {
+              } else if (linkY1AtColumn > node.y0 && linkY1AtColumn < node.y1) {
                 // If bottom of link overlaps node, push node down
-                let dy = linkY1AtDepth - node.y0 + 10
+                let dy = linkY1AtColumn - node.y0 + 10
 
-                node = adjustNodeHeight(node, dy);
+                node = adjustNodeHeight(node, dy, y1)
 
-                //check if other nodes need to move down too
-                graph.nodes.forEach(function(otherNode) {
-                  
-                  //don't need to check itself or nodes at different depths
-                  if ((otherNode.name == node.name) || (otherNode.depth != node.depth)) { return }
-                  if (otherNode.y0 < node.y1 && otherNode.y1 > node.y1) {
-
-                    adjustNodeHeight(otherNode, dy)
-
+                // check if other nodes need to move down too
+                graph.nodes.forEach(function (otherNode) {
+                  // don't need to check itself or nodes at different columns
+                  if (
+                    otherNode.name == node.name ||
+                    otherNode.column != node.column
+                  ) {
+                    return
                   }
-                  
+                  if (otherNode.y0 < node.y1 && otherNode.y1 > node.y1) {
+                    adjustNodeHeight(otherNode, dy, y1)
+                  }
                 })
-
-              } else if (linkY0AtDepth < node.y0 && linkY1AtDepth > node.y1) {
+              } else if (linkY0AtColumn < node.y0 && linkY1AtColumn > node.y1) {
                 // if link completely overlaps node
-                let dy = linkY1AtDepth - node.y0 + 10
+                let dy = linkY1AtColumn - node.y0 + 10
 
-                node = adjustNodeHeight(node, dy);
+                node = adjustNodeHeight(node, dy, y1)
 
-                graph.nodes.forEach(function(otherNode) {
-                  
-                  //don't need to check itself or nodes at different depths
-                  if ((otherNode.name == node.name) || (otherNode.depth != node.depth)) { return }
-                  if (otherNode.y0 < node.y1 && otherNode.y1 > node.y1) {
-
-                    adjustNodeHeight(otherNode, dy)
-
+                graph.nodes.forEach(function (otherNode) {
+                  // don't need to check itself or nodes at different columns
+                  if (
+                    otherNode.name == node.name ||
+                    otherNode.column != node.column
+                  ) {
+                    return
                   }
-                  
+                  if (otherNode.y0 < node.y1 && otherNode.y1 > node.y1) {
+                    adjustNodeHeight(otherNode, dy, y1)
+                  }
                 })
-
               }
-
             }
           })
         }
@@ -1125,46 +1174,42 @@
     })
   }
 
-  function nodesOverlap(nodeA, nodeB) {
-
-    //test if nodeA top partially overlaps nodeB
+  function nodesOverlap (nodeA, nodeB) {
+    // test if nodeA top partially overlaps nodeB
     if (nodeA.y0 > nodeB.y0 && nodeA.y0 < nodeB.y1) {
       return true
-    }
-    //test if nodeA bottom partially overlaps nodeB
-    else if (nodeA.y1 > nodeB.y0 && nodeA.y1 < nodeB.y1) {
+    } else if (nodeA.y1 > nodeB.y0 && nodeA.y1 < nodeB.y1) {
+      // test if nodeA bottom partially overlaps nodeB
       return true
-    }
-    //test if nodeA covers nodeB
-    else if (nodeA.y0 < nodeB.y0 && nodeA.y1 > nodeB.y1) {
+    } else if (nodeA.y0 < nodeB.y0 && nodeA.y1 > nodeB.y1) {
+      // test if nodeA covers nodeB
       return true
+    } else {
+      return false
     }
-    else {
-      return false;
-    } 
-
   }
 
+  function adjustNodeHeight (node, dy, sankeyY1) {
+    
+    if ((node.y1 + dy) <= sankeyY1) {
+      
+      node.y0 = node.y0 + dy
+      node.y1 = node.y1 + dy
+  
+      node.targetLinks.forEach(function (l) {
+        l.y1 = l.y1 + dy
+      })
+  
+      node.sourceLinks.forEach(function (l) {
+        l.y0 = l.y0 + dy
+      })
 
-  function adjustNodeHeight (node, dy) {
-
-    node.y0 = node.y0 + dy
-    node.y1 = node.y1 + dy
-
-    node.targetLinks.forEach(function (l) {
-      l.y1 = l.y1 + dy
-    })
-
-    node.sourceLinks.forEach(function (l) {
-      l.y0 = l.y0 + dy
-    })
-
-    return node;
-
+    }
+    return node
   }
 
+  // sort and set the links' y0 for each node
   function sortSourceLinks (graph) {
-
     graph.nodes.forEach(function (node) {
       // move any nodes up which are off the bottom
       if (node.y + (node.y1 - node.y0) > height) {
@@ -1175,13 +1220,15 @@
         return l.source.name == node.name
       })
 
+      let nodeSourceLinksLength = nodesSourceLinks.length
+
       // if more than 1 link then sort
-      if (nodesSourceLinks.length > 1) {
+      if (nodeSourceLinksLength > 1) {
         nodesSourceLinks.sort(function (link1, link2) {
           // if both are not circular...
           if (!link1.circular && !link2.circular) {
-            // if the target nodes are the same depth, then sort by the link's target y
-            if (link1.target.depth == link2.target.depth) {
+            // if the target nodes are the same column, then sort by the link's target y
+            if (link1.target.column == link2.target.column) {
               return link1.y1 - link2.y1
             } else if (!sameInclines(link1, link2)) {
               // if the links slope in different directions, then sort by the link's target y
@@ -1189,27 +1236,12 @@
 
               // if the links slope in same directions, then sort by any overlap
             } else {
-              if (link1.target.depth > link2.target.depth) {
-                // if (node.name == "process10") {console.log("here")}
-                /* let link2Angle = linkAngleFromSource(link2);
-                    let link2AdjToLink1Y = linkXLength(link1) / Math.tan(link2Angle);
-                    let link2Adj = incline(link2) == "up"
-                      ? link2.y0 - link2AdjToLink1Y
-                      : link2.y0 + link2AdjToLink1Y; */
-
+              if (link1.target.column > link2.target.column) {
                 let link2Adj = linkPerpendicularYToLinkTarget(link2, link1)
-
                 return link1.y1 - link2Adj
               }
-              if (link2.target.depth > link1.target.depth) {
-                /* let link1Angle = linkAngleFromSource(link1);
-                    let link1AdjToLink2Y = linkXLength(link2) / Math.tan(link1Angle);
-                    let link1Adj = incline(link1) == "up"
-                      ? link1.y0 - link1AdjToLink2Y
-                      : link1.y0 + link1AdjToLink2Y; */
-
+              if (link2.target.column > link1.target.column) {
                 let link1Adj = linkPerpendicularYToLinkTarget(link1, link2)
-
                 return link1Adj - link2.y1
               }
             }
@@ -1229,24 +1261,24 @@
               link1.circularLinkType === link2.circularLinkType &&
               link1.circularLinkType == 'top'
             ) {
-              // ...and they both connect to a target with same depth, then sort by the target's y
-              if (link1.target.depth === link2.target.depth) {
+              // ...and they both connect to a target with same column, then sort by the target's y
+              if (link1.target.column === link2.target.column) {
                 return link1.target.y1 - link2.target.y1
               } else {
-                // ...and they connect to different depth targets, then sort by how far back they
-                return link2.target.depth - link1.target.depth
+                // ...and they connect to different column targets, then sort by how far back they
+                return link2.target.column - link1.target.column
               }
             } else if (
               link1.circularLinkType === link2.circularLinkType &&
               link1.circularLinkType == 'bottom'
             ) {
               // ...and they both loop the same way (both bottom)
-              // ...and they both connect to a target with same depth, then sort by the target's y
-              if (link1.target.depth === link2.target.depth) {
+              // ...and they both connect to a target with same column, then sort by the target's y
+              if (link1.target.column === link2.target.column) {
                 return link2.target.y1 - link1.target.y1
               } else {
-                // ...and they connect to different depth targets, then sort by how far back they
-                return link1.target.depth - link2.target.depth
+                // ...and they connect to different column targets, then sort by how far back they
+                return link1.target.column - link2.target.column
               }
             } else {
               // ...and they loop around different ways, the move top up and bottom down
@@ -1263,32 +1295,47 @@
         link.y0 = ySourceOffset + link.width / 2
         ySourceOffset = ySourceOffset + link.width
       })
+
+      // correct any circular bottom links so they are at the bottom of the node
+      nodesSourceLinks.forEach(function (link, i) {
+        if (link.circularLinkType == 'bottom') {
+          let j = i + 1
+          let offsetFromBottom = 0
+          // sum the widths of any links that are below this link
+          for (j; j < nodeSourceLinksLength; j++) {
+            offsetFromBottom = nodesSourceLinks[j].width
+          }
+          link.y0 = node.y1 - offsetFromBottom - link.width / 2
+        }
+      })
     })
   }
 
+  // sort and set the links' y1 for each node
   function sortTargetLinks (graph) {
-
     graph.nodes.forEach(function (node) {
       let nodesTargetLinks = graph.links.filter(function (l) {
         return l.target.name == node.name
       })
 
-      if (nodesTargetLinks.length > 1) {
+      let nodesTargetLinksLength = nodesTargetLinks.length
+
+      if (nodesTargetLinksLength > 1) {
         nodesTargetLinks.sort(function (link1, link2) {
           // if both are not circular, the base on the source y position
           if (!link1.circular && !link2.circular) {
-            if (link1.source.depth == link2.source.depth) {
+            if (link1.source.column == link2.source.column) {
               return link1.y0 - link2.y0
             } else if (!sameInclines(link1, link2)) {
               return link1.y0 - link2.y0
             } else {
-              // get the angle of the link to the further source node (ie the smaller depth)
-              if (link2.source.depth < link1.source.depth) {
+              // get the angle of the link to the further source node (ie the smaller column)
+              if (link2.source.column < link1.source.column) {
                 let link2Adj = linkPerpendicularYToLinkSource(link2, link1)
 
                 return link1.y0 - link2Adj
               }
-              if (link1.source.depth < link2.source.depth) {
+              if (link1.source.column < link2.source.column) {
                 let link1Adj = linkPerpendicularYToLinkSource(link1, link2)
 
                 return link1Adj - link2.y0
@@ -1310,24 +1357,24 @@
               link1.circularLinkType === link2.circularLinkType &&
               link1.circularLinkType == 'top'
             ) {
-              // ...and they both connect to a target with same depth, then sort by the target's y
-              if (link1.source.depth === link2.source.depth) {
+              // ...and they both connect to a target with same column, then sort by the target's y
+              if (link1.source.column === link2.source.column) {
                 return link1.source.y1 - link2.source.y1
               } else {
-                // ...and they connect to different depth targets, then sort by how far back they
-                return link1.source.depth - link2.source.depth
+                // ...and they connect to different column targets, then sort by how far back they
+                return link1.source.column - link2.source.column
               }
             } else if (
               link1.circularLinkType === link2.circularLinkType &&
               link1.circularLinkType == 'bottom'
             ) {
               // ...and they both loop the same way (both bottom)
-              // ...and they both connect to a target with same depth, then sort by the target's y
-              if (link1.source.depth === link2.source.depth) {
+              // ...and they both connect to a target with same column, then sort by the target's y
+              if (link1.source.column === link2.source.column) {
                 return link1.source.y1 - link2.source.y1
               } else {
-                // ...and they connect to different depth targets, then sort by how far back they
-                return link2.source.depth - link1.source.depth
+                // ...and they connect to different column targets, then sort by how far back they
+                return link2.source.column - link1.source.column
               }
             } else {
               // ...and they loop around different ways, the move top up and bottom down
@@ -1344,39 +1391,57 @@
         link.y1 = yTargetOffset + link.width / 2
         yTargetOffset = yTargetOffset + link.width
       })
+
+      // correct any circular bottom links so they are at the bottom of the node
+      nodesTargetLinks.forEach(function (link, i) {
+        if (link.circularLinkType == 'bottom') {
+          let j = i + 1
+          let offsetFromBottom = 0
+          // sum the widths of any links that are below this link
+          for (j; j < nodesTargetLinksLength; j++) {
+            offsetFromBottom = nodesTargetLinks[j].width
+          }
+          link.y1 = node.y1 - offsetFromBottom - link.width / 2
+        }
+      })
     })
   }
 
+  // test if links both slope up, or both slope down
   function sameInclines (link1, link2) {
     return incline(link1) == incline(link2)
   }
 
+  // returns the slope of a link, from source to target
+  // up => slopes up from source to target
+  // down => slopes down from source to target
   function incline (link) {
-    // positive => slopes up from source to target
-    // negative => slopes down from source to target
     return link.y0 - link.y1 > 0 ? 'up' : 'down'
   }
 
- ///////////////////////////////////////////////////////////////////////////////
+  function selfLinking (link) {
+    return link.source.name == link.target.name
+  }
+
+  /// ////////////////////////////////////////////////////////////////////////////
 
   exports.sankey = sankey
   exports.sankeyCenter = center
   exports.sankeyLeft = left
   exports.sankeyRight = right
   exports.sankeyJustify = justify
-  //exports.sankeyPath = sankeyPath
-  // exports.sankeyLinkHorizontal = sankeyLinkHorizontal
-  // exports.curveSankeyForceLink = curveSankeyForceLink
 
   Object.defineProperty(exports, '__esModule', { value: true })
 })
 
-var sankeyPath = function(link) {
+// function that determines whether draw path using d3.linkHorizontal() or the circularPathData.path string
+var sankeyPath = function (link) {
   let path = ''
   if (link.circular) {
     path = link.circularPathData.path
   } else {
-    var normalPath = d3.linkHorizontal()
+    var normalPath = d3
+      .linkHorizontal()
       .source(function (d) {
         let x = d.source.x0 + (d.source.x1 - d.source.x0)
         let y = d.y0
@@ -1392,82 +1457,89 @@ var sankeyPath = function(link) {
   return path
 }
 
+// Function that appends a path to selection that has sankey path data attached
+// The path is formatted as dash array, and triangle paths to create arrows along the path
+function appendArrows (selection, arrowLength, gapLength, arrowHeadSize) {
+  let totalDashArrayLength = arrowLength + gapLength
 
-function appendArrows(selection, arrowLength, gapLength, arrowHeadSize) {
-  
-        //let arrowLength = 20;
-        //let gapLength = 300;
+  arrows = selection
+    .append('path')
+    .attr('d', sankeyPath)
+    .style('stroke-width', 1)
+    .style('stroke', 'black')
+    .style('stroke-dasharray', arrowLength + ',' + gapLength)
 
-        let totalDashArrayLength = arrowLength + gapLength;
-  
-        arrows = selection.append("path")
-          .attr("d", sankeyPath)
-          .style("stroke-width", 1)
-          .style("stroke", "black")
-          .style("stroke-dasharray", arrowLength + "," + gapLength)
-  
-        arrows.each(function (arrow) {
-  
-          let thisPath = d3.select(this).node();
-          let parentG = d3.select(this.parentNode)
-          let pathLength = thisPath.getTotalLength();
-          let numberOfArrows = Math.ceil(pathLength / totalDashArrayLength);
-  
-          //remove the last arrow head if it will overlap the target node
-          //+4 to take into account arrow head size
-          if ((((numberOfArrows - 1) * totalDashArrayLength) + (arrowLength + 5)) > pathLength) {
-            numberOfArrows = numberOfArrows - 1;
-          }
-  
-          let arrowHeadData = d3.range(numberOfArrows).map(function (d, i) {
-            let length = (i * totalDashArrayLength) + arrowLength;
-  
-            let point = thisPath.getPointAtLength(length);
-            let previousPoint = thisPath.getPointAtLength(length - 2);
-  
-            let rotation = 0;
-  
-            if (point.y == previousPoint.y) {
-              rotation = (point.x < previousPoint.x) ? 180 : 0;
-            }
-            else if (point.x == previousPoint.x) {
-              rotation = (point.y < previousPoint.y) ? -90 : 90;
-            }
-            else {
-              let adj = Math.abs(point.x - previousPoint.x);
-              let opp = Math.abs(point.y - previousPoint.y);
-              let angle = Math.atan(opp / adj) * (180 / Math.PI);
-              if (point.x < previousPoint.x) {
-                angle = angle + ((90 - angle) * 2)
-              }
-              if (point.y < previousPoint.y) {
-                rotation = -angle;
-              }
-              else {
-                rotation = angle;
-              }
-            };
-  
-            return { x: point.x, y: point.y, rotation: rotation };
-  
-          });
-  
-          let arrowHeads = parentG.selectAll(".arrow-heads")
-            .data(arrowHeadData)
-            .enter()
-            .append("path")
-            .attr("d", function (d) {
-              return "M" + (d.x) + "," + (d.y - (arrowHeadSize/2)) + " "
-                + "L" + (d.x + arrowHeadSize) + "," + (d.y) + " "
-                + "L" + d.x + "," + (d.y + (arrowHeadSize/2));
-            })
-            .attr("class", "arrow-head")
-            .attr("transform", function (d) {
-              return "rotate(" + d.rotation + "," + d.x + "," + d.y + ")";
-  
-            })
-            .style("fill", "black")
-  
-        });
-  
+  arrows.each(function (arrow) {
+    let thisPath = d3.select(this).node()
+    let parentG = d3.select(this.parentNode)
+    let pathLength = thisPath.getTotalLength()
+    let numberOfArrows = Math.ceil(pathLength / totalDashArrayLength)
+
+    // remove the last arrow head if it will overlap the target node
+    if (
+      (numberOfArrows - 1) * totalDashArrayLength +
+        (arrowLength + (arrowHeadSize + 1)) >
+      pathLength
+    ) {
+      numberOfArrows = numberOfArrows - 1
+    }
+
+    let arrowHeadData = d3.range(numberOfArrows).map(function (d, i) {
+      let length = i * totalDashArrayLength + arrowLength
+
+      let point = thisPath.getPointAtLength(length)
+      let previousPoint = thisPath.getPointAtLength(length - 2)
+
+      let rotation = 0
+
+      if (point.y == previousPoint.y) {
+        rotation = point.x < previousPoint.x ? 180 : 0
+      } else if (point.x == previousPoint.x) {
+        rotation = point.y < previousPoint.y ? -90 : 90
+      } else {
+        let adj = Math.abs(point.x - previousPoint.x)
+        let opp = Math.abs(point.y - previousPoint.y)
+        let angle = Math.atan(opp / adj) * (180 / Math.PI)
+        if (point.x < previousPoint.x) {
+          angle = angle + (90 - angle) * 2
+        }
+        if (point.y < previousPoint.y) {
+          rotation = -angle
+        } else {
+          rotation = angle
+        }
       }
+
+      return { x: point.x, y: point.y, rotation: rotation }
+    })
+
+    let arrowHeads = parentG
+      .selectAll('.arrow-heads')
+      .data(arrowHeadData)
+      .enter()
+      .append('path')
+      .attr('d', function (d) {
+        return (
+          'M' +
+          d.x +
+          ',' +
+          (d.y - arrowHeadSize / 2) +
+          ' ' +
+          'L' +
+          (d.x + arrowHeadSize) +
+          ',' +
+          d.y +
+          ' ' +
+          'L' +
+          d.x +
+          ',' +
+          (d.y + arrowHeadSize / 2)
+        )
+      })
+      .attr('class', 'arrow-head')
+      .attr('transform', function (d) {
+        return 'rotate(' + d.rotation + ',' + d.x + ',' + d.y + ')'
+      })
+      .style('fill', 'black')
+  })
+}

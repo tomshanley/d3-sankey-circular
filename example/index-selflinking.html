@@ -14,8 +14,6 @@
   <style>
     body {
       font-family: 'Roboto', sans-serif;
-      /*background: #E3D4C1;*/
-      /*background: #000;*/
     }
 
     rect {
@@ -23,11 +21,8 @@
     }
 
     text {
-      /*text-shadow: 0 1px 0 #fff;*/
       font-size: 12px;
-      /*font-family: 'Roboto', sans-serif;*/
       font-family: monospace;
-      /*fill: white;*/
     }
 
     .link {
@@ -43,11 +38,11 @@
   <div id="chart"></div>
 
   <script>
-    var margin = { top: 150, right: 100, bottom: 130, left: 120 };
+    var margin = { top: 250, right: 100, bottom: 130, left: 120 };
     var width = 1000;
     var height = 400;
 
-    let data = data2;
+    let data = data5;
 
     const nodePadding = 40;
 
@@ -62,7 +57,7 @@
       .nodeId(function (d) {
         return d.name;
       })
-      .nodeAlign(d3.sankeyJustify)
+      .nodeAlign(d3.sankeyRight)
       .iterations(32);
 
     var svg = d3.select("#chart").append("svg")
@@ -92,8 +87,7 @@
     let depthExtent = d3.extent(sankeyNodes, function (d) { return d.depth; });
 
     var nodeColour = d3.scaleSequential(d3.interpolateCool)
-      .domain([0, width]);
-
+    .domain([0,width]);
 
     //Adjust link Y coordinates based on target/source Y positions
 
@@ -107,7 +101,9 @@
       .attr("height", function (d) { return d.y1 - d.y0; })
       .attr("width", function (d) { return d.x1 - d.x0; })
       .style("fill", function (d) { return nodeColour(d.x0); })
+      //.style("fill", "black")
       .style("opacity", 0.5)
+      //.style("stroke", "black")
       .on("mouseover", function (d) {
 
         let thisName = d.name;
@@ -146,8 +142,8 @@
     var link = linkG.data(sankeyLinks)
       .enter()
       .append("g")
-
-    var paths = link.append("path")
+    
+    link.append("path") 
       .attr("class", "sankey-link")
       .attr("d", sankeyPath)
       .style("stroke-width", function (d) { return Math.max(1, d.width); })
@@ -155,63 +151,17 @@
       .style("stroke", function (link, i) {
         return link.circular ? "red" : "black"
       })
-
-
+     
     link.append("title")
       .text(function (d) {
         return d.source.name + " → " + d.target.name + "\n Index: " + (d.index);
-      });
+      });  
 
-
-    //ARROWS
     var arrowsG = linkG.data(sankeyLinks)
       .enter()
       .append("g")
       .attr("class", "g-arrow")
-      .call(appendArrows, 10, 10, 4) //arrow length, gap, arrow head size
-
-    arrowsG.selectAll("path")
-      .style("stroke-width", "10")
-      .attr("pointer-events", "none")
-    //.style("stroke-dasharray", "10,10")
-
-    arrowsG.selectAll(".arrow-head").remove()
-
-    var animateDash
-    var maxOffset = 10;
-    var increment = 0.01
-    var percentageOffset = 1;
-
-    paths.on("mouseover", function (d) {
-      d3.select(this).style("opacity", 0.9)
-      thisIndex = d.index;
-      animateDash = intervalTrigger(thisIndex)
-    })
-
-    paths.on("mouseout", function (d) {
-      d3.select(this).style("opacity", 0.7)
-      clearInterval(animateDash)
-      percentageOffset = 1;
-    })
-
-
-    function intervalTrigger(id) {
-
-      let selectedIndex = id
-
-      return setInterval(function () {
-
-        d3.selectAll(".g-arrow").selectAll("path")
-          .filter(function (link) { 
-              return link.index == id 
-            })
-          .style("stroke-dashoffset", percentageOffset * maxOffset)
-
-        percentageOffset = percentageOffset == 0 ? 1 : percentageOffset - increment;
-
-      }, 5);
-
-    }
+      .call(appendArrows, 20, 300, 4)
 
     function highlightNodes(node, name) {
 
@@ -234,6 +184,8 @@
       return opacity;
 
     }
+
+    
   </script>
 </body>
 
