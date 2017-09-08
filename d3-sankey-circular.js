@@ -385,7 +385,7 @@
             // check the node is not an orphan
             if (node.sourceLinks.length || node.targetLinks.length) {
               if (node.partOfCycle && numberOfNonSelfLinkingCycles(node) > 0) {
-                console.log(node.name + " " + node.y0)
+                //console.log(node.name + " " + node.y0)
               } else if (depth == 0 && n == 1) {
                 let nodeHeight = node.y1 - node.y0
 
@@ -456,8 +456,6 @@
               y = node.y0
             }
           }
-
-          console.log(node.name + " " + node.y0)
 
         })
       }
@@ -1113,8 +1111,6 @@
                 dy = node.circularLinkType == "bottom" ? dy : -dy;
 
                 node = adjustNodeHeight(node, dy, y1)
-
-                console.log(node.name + " " + node.y0)
 
                 // check if other nodes need to move up too
                 graph.nodes.forEach(function (otherNode) {
