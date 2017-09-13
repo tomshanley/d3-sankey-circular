@@ -18,22 +18,28 @@
           )
 })(this, function (exports, d3Array, d3Collection, d3Shape) {
   'use strict'
-  function targetDepth (d) {
-    return d.target.depth
+
+  // For a given link, return the target node's depth
+  function targetDepth (link) {
+    return link.target.depth
   }
 
+  // The depth of a node when the nodeAlign (align) is set to 'left'
   function left (node) {
     return node.depth
   }
 
+  // The depth of a node when the nodeAlign (align) is set to 'right'
   function right (node, n) {
     return n - 1 - node.height
   }
 
+  // The depth of a node when the nodeAlign (align) is set to 'justify'
   function justify (node, n) {
     return node.sourceLinks.length ? node.depth : n - 1
   }
 
+  // The depth of a node when the nodeAlign (align) is set to 'center'
   function center (node) {
     return node.targetLinks.length
       ? node.depth
@@ -42,20 +48,26 @@
           : 0
   }
 
+  // returns a function, using the parameter given to the sankey setting
   function constant (x) {
     return function () {
       return x
     }
   }
 
+  // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
   function ascendingSourceBreadth (a, b) {
     return ascendingBreadth(a.source, b.source) || a.index - b.index
   }
 
+  // sort links' breadth (ie top to bottom in a column), based on their target nodes' breadths
   function ascendingTargetBreadth (a, b) {
     return ascendingBreadth(a.target, b.target) || a.index - b.index
   }
 
+  // sort nodes' breadth (ie top to bottom in a column)
+  // if both nodes have circular links, or both don't have circular links, then sort by the top (y0) of the node
+  // else push nodes that have top circular links to the top, and nodes that have bottom circular links to the bottom
   function ascendingBreadth (a, b) {
     if (a.partOfCycle === b.partOfCycle) {
       return a.y0 - b.y0
@@ -68,100 +80,138 @@
     }
   }
 
+  // return the value of a node or link
   function value (d) {
     return d.value
   }
 
+  // return the vertical center of a node
   function nodeCenter (node) {
     return (node.y0 + node.y1) / 2
   }
 
+  // return the vertical center of a link's source node
   function linkSourceCenter (link) {
     return nodeCenter(link.source)
   }
 
+  // return the vertical center of a link's target node
   function linkTargetCenter (link) {
     return nodeCenter(link.target)
   }
 
-  function weightedSource (link) {
+
+  /*function weightedSource (link) {
     return nodeCenter(link.source) * link.value
-  }
+  }*/
 
-  function weightedTarget (link) {
+  /*function weightedTarget (link) {
     return nodeCenter(link.target) * link.value
-  }
+  }*/
 
+  // Return the default value for ID for node, d.index
   function defaultId (d) {
     return d.index
   }
 
+  // Return the default object the graph's nodes, graph.nodes
   function defaultNodes (graph) {
     return graph.nodes
   }
 
+  // Return the default object the graph's nodes, graph.links
   function defaultLinks (graph) {
     return graph.links
   }
 
+  // Return the node from the collection that matches the provided ID, or throw an error if no match
   function find (nodeById, id) {
     var node = nodeById.get(id)
     if (!node) throw new Error('missing: ' + id)
     return node
   }
 
+  // The main sankey functions
   var sankey = function () {
+
+    // Set the default values
     var x0 = 0,
       y0 = 0,
       x1 = 1,
       y1 = 1, // extent
       dx = 24, // nodeWidth
-      py, // nodePadding
+      py, // nodePadding, for vertical postioning
       scale = 1,
       id = defaultId,
       align = justify,
       nodes = defaultNodes,
       links = defaultLinks,
-      iterations = 32
-
-    var padding = Infinity
-    var paddingRatio = 0.1
+      iterations = 32,
+      circularLinkGap = 2,
+      paddingRatio = undefined;
 
     function sankey () {
+      
       var graph = {
         nodes: nodes.apply(null, arguments),
         links: links.apply(null, arguments)
       }
+
+      // Process the graph's nodes and links, setting their positions
+      
+      // 1.  Associate the nodes with their respective links, and vice versa
       computeNodeLinks(graph)
+      
+      // 2.  Determine which links result in a circular path in the graph
       identifyCircles(graph)
+      
+      // 3.  Determine how the circular links will be drawn,
+      //     either travelling back above the main chart ("top")
+      //     or below the main chart ("bottom")
       selectCircularLinkTypes(graph)
+      
+      // 4. Calculate the nodes' values, based on the values of the incoming and outgoing links 
       computeNodeValues(graph)
+      
+      // 5.  Calculate the nodes' depth based on the incoming and outgoing links 
+      //     Sets the nodes':
+      //     - depth:  the depth in the graph
+      //     - column: the depth (0, 1, 2, etc), as is relates to visual position from left to right
+      //     - x0, x1: the x coordinates, as is relates to visual position from left to right
       computeNodeDepths(graph)
+
+      // 6.  Calculate the nodes' and links' vertical position within their respective column
       computeNodeBreadths(graph, iterations)
       computeLinkBreadths(graph)
 
-      // sort links per node, based on the links' source/target positions
+      // 7.  Sort links per node, based on the links' source/target nodes' breadths
       sortSourceLinks(graph)
       sortTargetLinks(graph)
 
-      // adjust nodes that overlap links that span 2+ columns
+      // 8.  Adjust nodes that overlap links that span 2+ columns
       resolveNodeLinkOverlaps(graph, y1)
 
-      // sort links per node, based on the links' source/target positions
+      // 9.  Sort (again) links per node, based on the links' source/target nodes' breadths
+      //     Do this again, in case any nodes moved significantly in step 8.
       sortSourceLinks(graph)
       sortTargetLinks(graph)
 
-      // add d string for circular paths
-      addCircularPathData(graph)
+      // 10. Calculate visually appealling path for the circular paths, and create the "d" string
+      addCircularPathData(graph, circularLinkGap)
+
 
       return graph
-    }
 
-    sankey.update = function (graph) {
+    } //end of sankey function
+
+    // TODO - update this function to take into account circular changes
+    /*sankey.update = function (graph) {
       computeLinkBreadths(graph)
       return graph
-    }
+    }*/
 
+    // Set the sankey parameters
+    // nodeID, nodeAlign, nodeWidth, nodePadding, scale, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
     sankey.nodeId = function (_) {
       return arguments.length
         ? ((id = typeof _ === 'function' ? _ : constant(_)), sankey)
@@ -216,6 +266,10 @@
       return arguments.length ? ((iterations = +_), sankey) : iterations
     }
 
+    sankey.circularLinkGap = function (_) {
+      return arguments.length ? ((circularLinkGap = +_), sankey) : circularLinkGap
+    }
+
     sankey.nodePaddingRatio = function (_) {
       return arguments.length ? ((paddingRatio = +_), sankey) : paddingRatio
     }
@@ -267,7 +321,7 @@
       })
     }
 
-    // Iteratively assign the depth (x-position) for each node.
+    // Iteratively assign the depth for each node.
     // Nodes are assigned the maximum depth of incoming neighbors plus one;
     // nodes with no incoming links are assigned depth zero, while
     // nodes with no outgoing links are assigned the maximum depth.
@@ -313,6 +367,7 @@
       })
     }
 
+    // Assign nodes' breadths, and then shift nodes that overlap (resolveCollisions)
     function computeNodeBreadths (graph) {
       var columns = d3Collection
         .nest()
@@ -334,13 +389,17 @@
       }
 
       function initializeNodeBreadth () {
-        columns.forEach(function (nodes) {
-          let thisPadding = y1 * paddingRatio / (nodes.length + 1)
-          padding = thisPadding < padding ? thisPadding : padding
-        })
-
-        py = padding
-
+        
+        //override py if nodePadding has been set
+        if (paddingRatio) {
+          let padding = Infinity;
+          columns.forEach(function (nodes) {
+            let thisPadding = y1 * paddingRatio / (nodes.length + 1)
+            padding = thisPadding < padding ? thisPadding : padding
+          })
+          py = padding
+        }
+        
         var ky = d3Array.min(columns, function (nodes) {
           return (y1 - y0 - (nodes.length - 1) * py) / d3Array.sum(nodes, value)
         })
@@ -374,6 +433,8 @@
         })
       }
 
+      // For each node in each column, check the node's vertical position in relation to its targets and sources vertical position
+      // and shift up/down to be closer to the vertical middle of those targets and sources
       function relaxLeftAndRight (alpha) {
         let columnsLength = columns.length
 
@@ -425,6 +486,7 @@
         })
       }
 
+      // For each column, check if nodes are overlapping, and if so, shift up/down
       function resolveCollisions () {
         columns.forEach(function (nodes) {
           var node, dy, y = y0, n = nodes.length, i
@@ -461,6 +523,8 @@
       }
     }
 
+    // Assign the links y0 and y1 based on source/target nodes position,
+    // plus the link's relative position to other links to the same node
     function computeLinkBreadths (graph) {
       graph.nodes.forEach(function (node) {
         node.sourceLinks.sort(ascendingTargetBreadth)
@@ -518,6 +582,9 @@
     })
   }
 
+  // Assign a circular link type (top or bottom), based on:
+  // - if the source/target node already has circular links, then use the same type
+  // - if not, choose the type with fewer links
   function selectCircularLinkTypes (graph) {
     let numberOfTops = 0
     let numberOfBottoms = 0
@@ -606,6 +673,7 @@
     return Math.atan(opposite / adjacent)
   }
 
+  // Check if two circular links potentially overlap
   function circularLinksCross (link1, link2) {
     if (link1.source.column < link2.target.column) {
       return false
@@ -616,6 +684,7 @@
     }
   }
 
+  // Return the number of circular links for node, not including self linking links
   function numberOfNonSelfLinkingCycles(node) {
     
     let sourceCount = 0
@@ -632,6 +701,7 @@
 
   }
 
+  // Check if a circular link is the only circular link for both its source and target node
   function onlyCircularLink (link) {
     let nodeSourceLinks = link.source.sourceLinks
     let sourceCount = 0
@@ -653,7 +723,7 @@
   }
 
   // creates vertical buffer valeus per set of top/bottom links
-  function calcVerticalBuffer (links) {
+  function calcVerticalBuffer (links, circularLinkGap) {
     links.sort(sortLinkColumnAscending)
     links.forEach(function (link, i) {
       let buffer = 0
@@ -680,7 +750,7 @@
   }
 
   // calculate the optimum path for a link to reduce overlaps
-  function addCircularPathData (graph) {
+  function addCircularPathData (graph, circularLinkGap) {
     let baseRadius = 10
     let buffer = 10
     let verticalMargin = 25
@@ -700,12 +770,12 @@
     let topLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'top'
     })
-    topLinks = calcVerticalBuffer(topLinks)
+    topLinks = calcVerticalBuffer(topLinks, circularLinkGap)
 
     let bottomLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'bottom'
     })
-    bottomLinks = calcVerticalBuffer(bottomLinks)
+    bottomLinks = calcVerticalBuffer(bottomLinks, circularLinkGap)
 
     // add the base data for each link
     graph.links.forEach(function (link) {
@@ -1003,18 +1073,22 @@
     }
   }
 
+  // sort ascending links by their source vertical position, y0
   function sortLinkSourceYAscending (link1, link2) {
     return link1.y0 - link2.y0
   }
 
+  // sort descending links by their source vertical position, y0
   function sortLinkSourceYDescending (link1, link2) {
     return link2.y0 - link1.y0
   }
 
+  // sort ascending links by their target vertical position, y1
   function sortLinkTargetYAscending (link1, link2) {
     return link1.y1 - link2.y1
   }
 
+  // sort descending links by their target vertical position, y1
   function sortLinkTargetYDescending (link1, link2) {
     return link2.y1 - link1.y1
   }
@@ -1029,10 +1103,10 @@
     return link.target.x0 - link.source.x1
   }
 
+  // Return the Y coordinate on the longerLink path * which is perpendicular shorterLink's source.
+  // * approx, based on a straight line from target to source, when in fact the path is a bezier
   function linkPerpendicularYToLinkSource (longerLink, shorterLink) {
-    // Return the Y coordinate on the longerLink path * which is perpendicular shorterLink's source.
-    // * approx, based on a straight line from target to source, when in fact the path is a bezier
-
+    
     // get the angle for the longer link
     let angle = linkAngle(longerLink)
 
@@ -1047,9 +1121,9 @@
     return yPerpendicular
   }
 
+  // Return the Y coordinate on the longerLink path * which is perpendicular shorterLink's source.
+  // * approx, based on a straight line from target to source, when in fact the path is a bezier 
   function linkPerpendicularYToLinkTarget (longerLink, shorterLink) {
-    // Return the Y coordinate on the longerLink path * which is perpendicular shorterLink's source.
-    // * approx, based on a straight line from target to source, when in fact the path is a bezier
 
     // get the angle for the longer link
     let angle = linkAngle(longerLink)
@@ -1065,6 +1139,7 @@
     return yPerpendicular
   }
 
+  // Move any nodes that overlap links which span 2+ columns
   function resolveNodeLinkOverlaps (graph, y1) {
     graph.links.forEach(function (link) {
       if (link.circular) {
@@ -1170,6 +1245,7 @@
     })
   }
 
+  // check if two nodes overlap
   function nodesOverlap (nodeA, nodeB) {
     // test if nodeA top partially overlaps nodeB
     if (nodeA.y0 > nodeB.y0 && nodeA.y0 < nodeB.y1) {
@@ -1185,6 +1261,7 @@
     }
   }
 
+  // update a node, and its associated links, vertical positions (y0, y1)
   function adjustNodeHeight (node, dy, sankeyY1) {
     
     if ((node.y1 + dy) <= sankeyY1) {
@@ -1299,11 +1376,12 @@
           let offsetFromBottom = 0
           // sum the widths of any links that are below this link
           for (j; j < nodeSourceLinksLength; j++) {
-            offsetFromBottom = nodesSourceLinks[j].width
+            offsetFromBottom = offsetFromBottom + nodesSourceLinks[j].width
           }
           link.y0 = node.y1 - offsetFromBottom - link.width / 2
         }
       })
+
     })
   }
 
@@ -1391,15 +1469,16 @@
       // correct any circular bottom links so they are at the bottom of the node
       nodesTargetLinks.forEach(function (link, i) {
         if (link.circularLinkType == 'bottom') {
-          let j = i + 1
+          let j = i + 1;
           let offsetFromBottom = 0
           // sum the widths of any links that are below this link
           for (j; j < nodesTargetLinksLength; j++) {
-            offsetFromBottom = nodesTargetLinks[j].width
+            offsetFromBottom = offsetFromBottom + nodesTargetLinks[j].width
           }
-          link.y1 = node.y1 - offsetFromBottom - link.width / 2
+          link.y1 = node.y1 - offsetFromBottom - (link.width / 2)
         }
       })
+
     })
   }
 
@@ -1415,11 +1494,12 @@
     return link.y0 - link.y1 > 0 ? 'up' : 'down'
   }
 
+  // check if link is self linking, ie links a node to the same node
   function selfLinking (link) {
     return link.source.name == link.target.name
   }
 
-  /// ////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
 
   exports.sankey = sankey
   exports.sankeyCenter = center
@@ -1428,9 +1508,11 @@
   exports.sankeyJustify = justify
 
   Object.defineProperty(exports, '__esModule', { value: true })
+
 })
 
 // function that determines whether draw path using d3.linkHorizontal() or the circularPathData.path string
+// and returns the path string for the d value
 var sankeyPath = function (link) {
   let path = ''
   if (link.circular) {

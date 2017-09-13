@@ -48,14 +48,9 @@
     var height = 400;
 
     let data = data2;
-
-    const nodePadding = 40;
-
-    const circularLinkGap = 2;
-
     var sankey = d3.sankey()
       .nodeWidth(10)
-      .nodePadding(nodePadding)
+      .nodePadding(40) //note that this will be overridden by nodePaddingRatio
       .nodePaddingRatio(0.5)
       .scale(0.5)
       .size([width, height])
@@ -63,7 +58,8 @@
         return d.name;
       })
       .nodeAlign(d3.sankeyJustify)
-      .iterations(32);
+      .iterations(32)
+      .circularLinkGap(2);
 
     var svg = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -91,16 +87,8 @@
 
     let depthExtent = d3.extent(sankeyNodes, function (d) { return d.depth; });
 
-    //var nodeColour = d3.scaleSequential(d3.interpolateCool)
-    //.domain([depthExtent]);
-
     var nodeColour = d3.scaleSequential(d3.interpolateCool)
     .domain([0,width]);
-
-    //var colourTop = d3.scaleOrdinal(d3.interpolateMagma)
-    //var colourBottom = d3.scaleOrdinal(d3.schemeRdYlBu[9]);
-    
-    //Adjust link Y coordinates based on target/source Y positions
 
     var node = nodeG.data(sankeyNodes)
       .enter()
@@ -112,9 +100,7 @@
       .attr("height", function (d) { return d.y1 - d.y0; })
       .attr("width", function (d) { return d.x1 - d.x0; })
       .style("fill", function (d) { return nodeColour(d.x0); })
-      //.style("fill", "black")
       .style("opacity", 0.5)
-      //.style("stroke", "black")
       .on("mouseover", function (d) {
 
         let thisName = d.name;
@@ -140,16 +126,6 @@
         d3.selectAll("text").style("opacity", 1);
       })
 
-    /*node.append("text")
-      .attr("x", function (d) { return d.x0 - 6; })
-      .attr("y", function (d) { return d.y0 + ((d.y1 - d.y0) / 2); })
-      .attr("dy", "0.35em")
-      .attr("text-anchor", "end")
-      .text(function (d) { return d.name; })
-      .filter(function (d) { return (d.x0 < width / 2) && (d.depth != 0); })
-      .attr("x", function (d) { return d.x1 + 6; })
-      .attr("text-anchor", "start")*/
-
     node.append("text")
       .attr("x", function (d) { return (d.x0 + d.x1) / 2; })
       .attr("y", function (d) { return d.y0 - 12; })
@@ -172,167 +148,6 @@
       .style("stroke", function (link, i) {
         return link.circular ? "red" : "black"
       })
-      /*.style("stroke", function (link, i) {
-        if (!link.circular) { return "#988682" }
-        else {
-          return link.circularLinkType == "top" ? colourTop(i) : colourBottom(i)
-        }
-      })*/
-
-    //link.filter(function(l){ return l.circular == true }).selectAll("path").remove()
-    //link.filter(function(l){ return l.circular == true }).selectAll("path").style("opacity", 0.1)
-     /* if (link.circular) {
-
-        let thisPath = d3.select(this).node();
-        let pathLength = thisPath.getTotalLength();
-
-        let dash = pathLength * 0.1;
-        let gap = pathLength * 0.8;
-
-        return dash + "," + gap;
-      };
-    })*/
-
-    /*link.filter(function(l){ return l.circular == true })
-      .append("path")
-      .attr("d", function(l){
-        let pathString = ""
-        if (l.circularLinkType == 'top') {
-      pathString =
-      'M' +
-        l.circularPathData.rightFullExtent +
-        ' ' +
-        "-20" + " " +  
-      'L' +
-        l.circularPathData.rightFullExtent +
-        ' ' +
-        (l.circularPathData.targetY -
-          l.circularPathData.rightSmallArcRadius) +
-        ' ' +
-        // Arc around: Centre of arc X and  //Centre of arc Y
-        'A' +
-        l.circularPathData.rightLargeArcRadius +
-        ' ' +
-        l.circularPathData.rightSmallArcRadius +
-        ' 0 0 0 ' +
-        // End of arc X //End of arc Y
-        l.circularPathData.rightInnerExtent +
-        ' ' +
-        l.circularPathData.targetY +
-        ' ' + // End of arc X
-        // line to end
-        'L' +
-        l.circularPathData.targetX +
-        ' ' +
-        l.circularPathData.targetY
-        } else {
-          pathString =
-          'M' +
-        l.circularPathData.rightFullExtent +
-        ' ' +
-        (height + 20) + " " + 
-
-          'L' +
-          l.circularPathData.rightFullExtent +
-          ' ' +
-          (l.circularPathData.targetY +
-            l.circularPathData.rightSmallArcRadius) +
-          ' ' +
-          // Arc around: Centre of arc X and  //Centre of arc Y
-          'A' +
-          l.circularPathData.rightLargeArcRadius +
-          ' ' +
-          l.circularPathData.rightSmallArcRadius +
-          ' 0 0 1 ' +
-          // End of arc X //End of arc Y
-          l.circularPathData.rightInnerExtent +
-          ' ' +
-          l.circularPathData.targetY +
-          ' ' + // End of arc X
-          // line to end
-          'L' +
-          l.circularPathData.targetX +
-          ' ' +
-          l.circularPathData.targetY
-        }
-        return pathString
-      })
-      .style("stroke-width", function (d) { return Math.max(1, d.width); })
-      .style("opacity", 0.7);
-
-    link.filter(function(l){ return l.circular == true })
-      .append("path")
-      .attr("d", function(l){
-        let pathString = ""
-        if (l.circularLinkType == 'top') {
-      pathString =
-        // start at the right of the source node
-        'M' +
-        l.circularPathData.sourceX +
-        ' ' +
-        l.circularPathData.sourceY +
-        ' ' +
-        // line right to buffer point
-        'L' +
-        l.circularPathData.leftInnerExtent +
-        ' ' +
-        l.circularPathData.sourceY +
-        ' ' +
-        // Arc around: Centre of arc X and  //Centre of arc Y
-        'A' +
-        l.circularPathData.leftLargeArcRadius +
-        ' ' +
-        l.circularPathData.leftSmallArcRadius +
-        ' 0 0 0 ' +
-        // End of arc X //End of arc Y
-        l.circularPathData.leftFullExtent +
-        ' ' +
-        (l.circularPathData.sourceY -
-          l.circularPathData.leftSmallArcRadius) +
-        ' ' + // End of arc X
-        // line up to buffer point
-        'L' +
-        l.circularPathData.leftFullExtent +
-        ' ' +
-        "-20"
-        } else {
-          pathString =
-        // start at the right of the source node
-        'M' +
-        l.circularPathData.sourceX +
-        ' ' +
-        l.circularPathData.sourceY +
-        ' ' +
-        // line right to buffer point
-        'L' +
-        l.circularPathData.leftInnerExtent +
-        ' ' +
-        l.circularPathData.sourceY +
-        ' ' +
-        // Arc around: Centre of arc X and  //Centre of arc Y
-        'A' +
-        l.circularPathData.leftLargeArcRadius +
-        ' ' +
-        l.circularPathData.leftSmallArcRadius +
-        ' 0 0 1 ' +
-        // End of arc X //End of arc Y
-        l.circularPathData.leftFullExtent +
-        ' ' +
-        (l.circularPathData.sourceY +
-          l.circularPathData.leftSmallArcRadius) +
-        ' ' + // End of arc X
-        // line down to buffer point
-        'L' +
-        l.circularPathData.leftFullExtent +
-        ' ' +
-        (height + 20)
-        }
-        return pathString
-      })
-      .style("stroke-width", function (d) { return Math.max(1, d.width); })
-      .style("opacity", 0.7);*/
-
-    
 
     link.append("title")
       .text(function (d) {
