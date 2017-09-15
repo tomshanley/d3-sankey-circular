@@ -149,7 +149,9 @@ If *padding* is specified, sets the vertical separation between nodes at each co
 
 <a name="sankey_nodePaddingRatio" href="#sankey_nodePaddingRatio">#</a> <i>sankey</i>.<b>nodePaddingRatio</b>([<i>proportion</i>]) [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L89 "Source")
 
-If *proportion* is specified (from 0 to 1), sets the vertical separation between nodes at each column to the specified number and returns this Sankey generator. If *padding* is not specified, returns the current node padding, which defaults to 8.
+If *proportion* is specified (from 0 to 1), sets the vertical separation between nodes at each column to the specified number and returns this Sankey generator. The proportion is applied to the most dense column of nodes, and calculates a minimum padding that will be used across the chart.
+
+If a nodePaddingRatio is not specified, then defaults to the *padding* setting in pixels.
 
 <a name="sankey_extent" href="#sankey_extent">#</a> <i>sankey</i>.<b>extent</b>([<i>extent</i>]) [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L105 "Source")
 
