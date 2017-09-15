@@ -38,9 +38,9 @@
   <div id="chart"></div>
 
   <script>
-    var margin = { top: 250, right: 100, bottom: 130, left: 120 };
-    var width = 1000;
-    var height = 400;
+    var margin = { top: 0, right: 0, bottom: 0, left: 0 };
+    var width = 1200;
+    var height = 800;
 
     let data = data5;
 
@@ -52,7 +52,6 @@
       .nodeWidth(10)
       .nodePadding(nodePadding)
       .nodePaddingRatio(0.5)
-      .scale(0.5)
       .size([width, height])
       .nodeId(function (d) {
         return d.name;

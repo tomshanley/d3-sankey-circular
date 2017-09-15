@@ -43,16 +43,15 @@
   <div id="chart"></div>
 
   <script>
-    var margin = { top: 150, right: 100, bottom: 130, left: 120 };
-    var width = 1000;
-    var height = 400;
+    var margin = { top: 30, right: 30, bottom: 30, left: 30};
+    var width = 1100;
+    var height = 750;
 
     let data = data2;
     var sankey = d3.sankey()
       .nodeWidth(10)
       .nodePadding(40) //note that this will be overridden by nodePaddingRatio
       .nodePaddingRatio(0.5)
-      .scale(0.5)
       .size([width, height])
       .nodeId(function (d) {
         return d.name;
@@ -161,7 +160,6 @@
       .append("g")
       .attr("class", "g-arrow")
       .call(appendArrows, 20, 300, 4) //arrow length, gap, arrow head size
-
 
     function highlightNodes(node, name) {
 

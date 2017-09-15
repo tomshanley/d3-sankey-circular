@@ -43,9 +43,9 @@
   <div id="chart"></div>
 
   <script>
-    var margin = { top: 150, right: 100, bottom: 130, left: 120 };
-    var width = 1000;
-    var height = 400;
+    var margin = { top: 30, right: 30, bottom: 30, left: 30 };
+    var width = 1100;
+    var height = 600;
 
     let data = data2;
 
@@ -56,14 +56,13 @@
     var sankey = d3.sankey()
       .nodeWidth(10)
       .nodePadding(nodePadding)
-      .nodePaddingRatio(0.5)
-      .scale(0.5)
+      .nodePaddingRatio(0.1)
       .size([width, height])
       .nodeId(function (d) {
         return d.name;
       })
       .nodeAlign(d3.sankeyJustify)
-      .iterations(32);
+      .iterations(0);
 
     var svg = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -93,9 +92,6 @@
 
     var nodeColour = d3.scaleSequential(d3.interpolateCool)
       .domain([0, width]);
-
-
-    //Adjust link Y coordinates based on target/source Y positions
 
     var node = nodeG.data(sankeyNodes)
       .enter()
@@ -162,7 +158,6 @@
         return d.source.name + " → " + d.target.name + "\n Index: " + (d.index);
       });
 
-
     //ARROWS
     var arrowsG = linkG.data(sankeyLinks)
       .enter()
@@ -171,7 +166,7 @@
       .call(appendArrows, 10, 10, 4) //arrow length, gap, arrow head size
 
     arrowsG.selectAll("path")
-      .style("stroke-width", "10")
+      .style("stroke-width", 6)
       .attr("pointer-events", "none")
     //.style("stroke-dasharray", "10,10")
 
