@@ -134,7 +134,7 @@
   // Some constants for circular link calculations
   const verticalMargin = 25;
   const baseRadius = 10;
-  const scale = 0.3
+  const scale = 0.3; //Possibly let user control this, although anything over 0.5 starts to get too cramped
 
   var sankey = function () {
     // Set the default values
@@ -187,18 +187,20 @@
       computeLinkBreadths(graph)
 
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
-      sortSourceLinks(graph, y1)
-      sortTargetLinks(graph, y1)
-
       // 8.  Adjust nodes that overlap links that span 2+ columns
-      resolveNodeLinkOverlaps(graph, y0, y1)
 
-      // 9.  Sort links per node again, based on the links' source/target nodes' breadths,
-      //     to take into account any changes made during resolveNodeLinkOverlaps
-      sortSourceLinks(graph, y1)
-      sortTargetLinks(graph, y1)
+      let linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
+      for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
 
-      // 10. Calculate visually appealling path for the circular paths, and create the "d" string
+        sortSourceLinks(graph, y1)
+        sortTargetLinks(graph, y1)
+        resolveNodeLinkOverlaps(graph, y0, y1)
+        sortSourceLinks(graph, y1)
+        sortTargetLinks(graph, y1)
+
+      }
+
+      // 9. Calculate visually appealling path for the circular paths, and create the "d" string
       addCircularPathData(graph, circularLinkGap, y1)
 
       return graph
@@ -1239,6 +1241,13 @@
 
               let linkY0AtColumn = py_t - (link.width / 2)
               let linkY1AtColumn = py_t + (link.width / 2)
+
+              if (node.name == "process14") {
+                console.log(node.name)
+                console.log(node.y0 + " " + node.y1)
+                console.log(link.index)
+                console.log(linkY0AtColumn + " " + linkY1AtColumn)
+              }
 
               // If top of link overlaps node, push node up
               if (linkY0AtColumn > node.y0 && linkY0AtColumn < node.y1) {
