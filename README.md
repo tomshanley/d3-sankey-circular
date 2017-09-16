@@ -1,6 +1,6 @@
 # d3-sankey-circular
 
-A fork of the d3-sankey library (https://github.com/d3/d3-sankey) to allow circular links (ie cyclic graphs).
+A fork of the d3-sankey library (https://github.com/d3/d3-sankey) to allow circular links (ie cyclic graphs, like in [this example](https://bl.ocks.org/tomshanley/a23af553fabcb7a0d949b4d1a9b2b4fd)).
 
 The library contains a portion of code from Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043 to detect circular links. 
 
@@ -132,8 +132,6 @@ var links = [
   {"source": "Bob", "target": "Carol"}
 ];
 ```
-
-This is particularly useful when representing graphs in JSON, as JSON does not allow references. See [this example](https://bl.ocks.org/mbostock/f584aa36df54c451c94a9d0798caed35).
 
 <a name="sankey_nodeAlign" href="#sankey_nodeAlign">#</a> <i>sankey</i>.<b>nodeAlign</b>([<i>align</i>]) [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L81 "Source")
 
