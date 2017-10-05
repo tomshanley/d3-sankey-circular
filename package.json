@@ -1,6 +1,6 @@
 {
   "name": "d3-sankey-circular",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "D3v4 plugin to generate sankey charts with circular paths",
   "main": "d3-sankey-circular.js",
   "directories": {
@@ -22,5 +22,10 @@
   "bugs": {
     "url": "https://github.com/tomshanley/d3-sankey-circular/issues"
   },
-  "homepage": "https://github.com/tomshanley/d3-sankey-circular#readme"
+  "homepage": "https://github.com/tomshanley/d3-sankey-circular#readme",
+  "dependencies": {
+    "d3-array": "^1.2.1",
+    "d3-collection": "^1.0.4",
+    "d3-shape": "^1.2.0"
+  }
 }
