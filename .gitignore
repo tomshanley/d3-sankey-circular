@@ -56,4 +56,7 @@ typings/
 
 # dotenv environment variables file
 .env
+<<<<<<< HEAD
 
+=======
+>>>>>>> restore gitignore
