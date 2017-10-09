@@ -2,8 +2,8 @@
 // fork of https://github.com/d3/d3-sankey copyright Mike Bostock
 import {ascending, min, sum} from "d3-array";
 import {map, nest} from "d3-collection";
-import {justify} from "./align";
-import constant from "./constant";
+import {justify} from "align";
+import constant from "constant";
 
 
   // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
