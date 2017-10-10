@@ -4,6 +4,7 @@ import {linkHorizontal} from "d3-shape";
 // and returns the path string for the d value
 export var sankeyPath = function (link) {
   let path = ''
+  console.log(link)
   if (link.circular) {
     path = link.circularPathData.path
   } else {
@@ -20,5 +21,6 @@ export var sankeyPath = function (link) {
       })
     path = normalPath(link)
   }
+  console.log(link)
   return path
 }

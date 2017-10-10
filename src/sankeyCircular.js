@@ -1,9 +1,10 @@
-// https://github.com/tomshanley/d3-sankey-circular
-// fork of https://github.com/d3/d3-sankey copyright Mike Bostock
-import {ascending, min, sum} from "d3-array";
+// https://github.com/tomshanley/d3-sankeyCircular-circular
+// fork of https://github.com/d3/d3-sankeyCircular copyright Mike Bostock
+import {ascending, min, max, mean, sum} from "d3-array";
 import {map, nest} from "d3-collection";
-import {justify} from "align";
-import constant from "constant";
+import {justify} from "./align";
+import constant from "./constant";
+import {linkHorizontal} from "d3-shape";
 
 
   // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
@@ -81,7 +82,7 @@ import constant from "constant";
     return node
   }
 
-  // The main sankey functions
+  // The main sankeyCircular functions
 
   // Some constants for circular link calculations
   const verticalMargin = 25;
@@ -134,7 +135,7 @@ import constant from "constant";
       computeNodeDepths(graph)
 
       // 6.  Calculate the nodes' and links' vertical position within their respective column
-      //     Also readjusts sankey size if circular links are needed, and node x's
+      //     Also readjusts sankeyCircular size if circular links are needed, and node x's
       computeNodeBreadths(graph, iterations)
       computeLinkBreadths(graph)
 
@@ -156,74 +157,74 @@ import constant from "constant";
       addCircularPathData(graph, circularLinkGap, y1)
 
       return graph
-    } // end of sankey function
+    } // end of sankeyCircular function
 
     // TODO - update this function to take into account circular changes
-    /*sankey.update = function (graph) {
+    /*sankeyCircular.update = function (graph) {
       computeLinkBreadths(graph)
       return graph
     }*/
 
-    // Set the sankey parameters
+    // Set the sankeyCircular parameters
     // nodeID, nodeAlign, nodeWidth, nodePadding, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
-    sankey.nodeId = function (_) {
+    sankeyCircular.nodeId = function (_) {
       return arguments.length
-        ? ((id = typeof _ === 'function' ? _ : constant(_)), sankey)
+        ? ((id = typeof _ === 'function' ? _ : constant(_)), sankeyCircular)
         : id
     }
 
-    sankey.nodeAlign = function (_) {
+    sankeyCircular.nodeAlign = function (_) {
       return arguments.length
-        ? ((align = typeof _ === 'function' ? _ : constant(_)), sankey)
+        ? ((align = typeof _ === 'function' ? _ : constant(_)), sankeyCircular)
         : align
     }
 
-    sankey.nodeWidth = function (_) {
-      return arguments.length ? ((dx = +_), sankey) : dx
+    sankeyCircular.nodeWidth = function (_) {
+      return arguments.length ? ((dx = +_), sankeyCircular) : dx
     }
 
-    sankey.nodePadding = function (_) {
-      return arguments.length ? ((py = +_), sankey) : py
+    sankeyCircular.nodePadding = function (_) {
+      return arguments.length ? ((py = +_), sankeyCircular) : py
     }
 
-    sankey.nodes = function (_) {
+    sankeyCircular.nodes = function (_) {
       return arguments.length
-        ? ((nodes = typeof _ === 'function' ? _ : constant(_)), sankey)
+        ? ((nodes = typeof _ === 'function' ? _ : constant(_)), sankeyCircular)
         : nodes
     }
 
-    sankey.links = function (_) {
+    sankeyCircular.links = function (_) {
       return arguments.length
-        ? ((links = typeof _ === 'function' ? _ : constant(_)), sankey)
+        ? ((links = typeof _ === 'function' ? _ : constant(_)), sankeyCircular)
         : links
     }
 
-    sankey.size = function (_) {
+    sankeyCircular.size = function (_) {
       return arguments.length
-        ? ((x0 = y0 = 0), (x1 = +_[0]), (y1 = +_[1]), sankey)
+        ? ((x0 = y0 = 0), (x1 = +_[0]), (y1 = +_[1]), sankeyCircular)
         : [x1 - x0, y1 - y0]
     }
 
-    sankey.extent = function (_) {
+    sankeyCircular.extent = function (_) {
       return arguments.length
         ? ((x0 = +_[0][0]), (x1 = +_[1][0]), (y0 = +_[0][1]), (y1 = +_[1][
             1
-          ]), sankey)
+          ]), sankeyCircular)
         : [[x0, y0], [x1, y1]]
     }
 
-    sankey.iterations = function (_) {
-      return arguments.length ? ((iterations = +_), sankey) : iterations
+    sankeyCircular.iterations = function (_) {
+      return arguments.length ? ((iterations = +_), sankeyCircular) : iterations
     }
 
-    sankey.circularLinkGap = function (_) {
+    sankeyCircular.circularLinkGap = function (_) {
       return arguments.length
-        ? ((circularLinkGap = +_), sankey)
+        ? ((circularLinkGap = +_), sankeyCircular)
         : circularLinkGap
     }
 
-    sankey.nodePaddingRatio = function (_) {
-      return arguments.length ? ((paddingRatio = +_), sankey) : paddingRatio
+    sankeyCircular.nodePaddingRatio = function (_) {
+      return arguments.length ? ((paddingRatio = +_), sankeyCircular) : paddingRatio
     }
 
     // Populate the sourceLinks and targetLinks for each node.
@@ -234,7 +235,7 @@ import constant from "constant";
         node.sourceLinks = []
         node.targetLinks = []
       })
-      var nodeById = d3Collection.map(graph.nodes, id)
+      var nodeById = map(graph.nodes, id)
       graph.links.forEach(function (link, i) {
         link.index = i
         var source = link.source
@@ -255,8 +256,8 @@ import constant from "constant";
       graph.nodes.forEach(function (node) {
         node.partOfCycle = false
         node.value = Math.max(
-          d3Array.sum(node.sourceLinks, value),
-          d3Array.sum(node.targetLinks, value)
+          sum(node.sourceLinks, value),
+          sum(node.targetLinks, value)
         )
         node.sourceLinks.forEach(function (link) {
           if (link.circular) {
@@ -273,14 +274,14 @@ import constant from "constant";
       })
     }
 
-    // Update the x0, y0, x1 and y1 for the sankey, to allow space for any circular links
+    // Update the x0, y0, x1 and y1 for the sankeyCircular, to allow space for any circular links
     function scaleSankeySize (graph) {
       let totalTopLinksWidth = 0,
         totalBottomLinksWidth = 0,
         totalRightLinksWidth = 0,
         totalLeftLinksWidth = 0
 
-      let maxColumn = d3.max(graph.nodes, function (node) {
+      let maxColumn = max(graph.nodes, function (node) {
         return node.column
       })
 
@@ -378,12 +379,11 @@ import constant from "constant";
 
     // Assign nodes' breadths, and then shift nodes that overlap (resolveCollisions)
     function computeNodeBreadths (graph) {
-      var columns = d3Collection
-        .nest()
+      var columns = nest()
         .key(function (d) {
           return d.column
         })
-        .sortKeys(d3Array.ascending)
+        .sortKeys(ascending)
         .entries(graph.nodes)
         .map(function (d) {
           return d.values
@@ -409,8 +409,8 @@ import constant from "constant";
           py = padding
         }
 
-        var ky = d3Array.min(columns, function (nodes) {
-          return (y1 - y0 - (nodes.length - 1) * py) / d3Array.sum(nodes, value)
+        var ky = min(columns, function (nodes) {
+          return (y1 - y0 - (nodes.length - 1) * py) / sum(nodes, value)
         })
 
         //calculate the widths of the links
@@ -481,11 +481,11 @@ import constant from "constant";
               } else {
                 let avg = 0
 
-                let avgTargetY = d3Array.mean(
+                let avgTargetY = mean(
                   node.sourceLinks,
                   linkTargetCenter
                 )
-                let avgSourceY = d3Array.mean(
+                let avgSourceY = mean(
                   node.targetLinks,
                   linkSourceCenter
                 )
@@ -777,7 +777,7 @@ import constant from "constant";
     let buffer = 5
     //let verticalMargin = 25
 
-    let minY = d3.min(graph.links, function (link) {
+    let minY = min(graph.links, function (link) {
       return link.source.y0
     })
 
@@ -897,8 +897,29 @@ import constant from "constant";
         link.circularPathData.leftFullExtent = link.circularPathData.sourceX + link.circularPathData.leftLargeArcRadius + link.circularPathData.leftNodeBuffer
         link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius - link.circularPathData.rightNodeBuffer
 
-        link.circularPathData.path = createCircularPathString(link)
+        
+        
+        
+        
       }
+
+      if (link.circular) {
+        link.path = createCircularPathString(link)
+      } else {
+        var normalPath = linkHorizontal()
+          .source(function (d) {
+            let x = d.source.x0 + (d.source.x1 - d.source.x0)
+            let y = d.y0
+            return [x, y]
+          })
+          .target(function (d) {
+            let x = d.target.x0
+            let y = d.y1
+            return [x, y]
+          })
+        link.path = normalPath(link)
+      }
+
     })
   }
 
@@ -1519,13 +1540,13 @@ import constant from "constant";
 
   /// ////////////////////////////////////////////////////////////////////////////
 
-  exports.sankey = sankey
+  /*exports.sankeyCircular = sankeyCircular
   exports.sankeyCenter = center
   exports.sankeyLeft = left
   exports.sankeyRight = right
   exports.sankeyJustify = justify
 
-  Object.defineProperty(exports, '__esModule', { value: true })
+  Object.defineProperty(exports, '__esModule', { value: true })*/
 
 
 

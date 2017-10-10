@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _sankeyCircular = require("sankeyCircular.js");
+var _sankeyCircular = require("./sankeyCircular.js");
 
 Object.defineProperty(exports, "sankeyCircular", {
   enumerable: true,
@@ -13,7 +13,7 @@ Object.defineProperty(exports, "sankeyCircular", {
   }
 });
 
-var _align = require("align");
+var _align = require("./align");
 
 Object.defineProperty(exports, "sankeyCenter", {
   enumerable: true,
@@ -37,24 +37,6 @@ Object.defineProperty(exports, "sankeyJustify", {
   enumerable: true,
   get: function () {
     return _align.justify;
-  }
-});
-
-var _sankeyPath = require("sankeyPath.js");
-
-Object.defineProperty(exports, "sankeyPath", {
-  enumerable: true,
-  get: function () {
-    return _interopRequireDefault(_sankeyPath).default;
-  }
-});
-
-var _sankeyPathArrows = require("sankeyPathArrows.js");
-
-Object.defineProperty(exports, "sankeyPathArrows", {
-  enumerable: true,
-  get: function () {
-    return _interopRequireDefault(_sankeyPathArrows).default;
   }
 });
 
