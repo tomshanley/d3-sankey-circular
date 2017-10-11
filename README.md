@@ -18,7 +18,7 @@ var sankey = d3.sankeyCircular();
 
 <b>*The API follows the original d3-sankey library, with additional options to allow the circular links to be laid out and drawn.*</b>
 
-<a href="#sankey" name="sankey">#</a> d3.<b>sankey</b>() [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L52 "Source")
+<a href="#sankey" name="sankey">#</a> d3.<b>sankeyCircular</b>() [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L52 "Source")
 
 Constructs a new Sankey generator with the default settings.
 
