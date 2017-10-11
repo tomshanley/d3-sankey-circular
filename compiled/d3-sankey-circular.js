@@ -944,8 +944,27 @@
         link.circularPathData.leftFullExtent = link.circularPathData.sourceX + link.circularPathData.leftLargeArcRadius + link.circularPathData.leftNodeBuffer
         link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius - link.circularPathData.rightNodeBuffer
 
-        link.circularPathData.path = createCircularPathString(link)
+        
       }
+
+      if (link.circular) {
+        link.path = createCircularPathString(link)
+      } else {
+        var normalPath = linkHorizontal()
+          .source(function (d) {
+            let x = d.source.x0 + (d.source.x1 - d.source.x0)
+            let y = d.y0
+            return [x, y]
+          })
+          .target(function (d) {
+            let x = d.target.x0
+            let y = d.y1
+            return [x, y]
+          })
+        link.path = normalPath(link)
+      }
+
+
     })
   }
 
@@ -1575,29 +1594,7 @@
   Object.defineProperty(exports, '__esModule', { value: true })
 })
 
-// function that determines whether draw path using d3.linkHorizontal() or the circularPathData.path string
-// and returns the path string for the d value
-var sankeyPath = function (link) {
-  let path = ''
-  if (link.circular) {
-    path = link.circularPathData.path
-  } else {
-    var normalPath = d3
-      .linkHorizontal()
-      .source(function (d) {
-        let x = d.source.x0 + (d.source.x1 - d.source.x0)
-        let y = d.y0
-        return [x, y]
-      })
-      .target(function (d) {
-        let x = d.target.x0
-        let y = d.y1
-        return [x, y]
-      })
-    path = normalPath(link)
-  }
-  return path
-}
+
 
 // Function that appends a path to selection that has sankey path data attached
 // The path is formatted as dash array, and triangle paths to create arrows along the path
