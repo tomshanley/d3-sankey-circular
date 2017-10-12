@@ -1,6 +1,6 @@
 # d3-sankey-circular
 
-A fork of the d3-sankey library (https://github.com/d3/d3-sankey) to allow circular links (ie cyclic graphs, like in [this example](https://bl.ocks.org/tomshanley/a23af553fabcb7a0d949b4d1a9b2b4fd)).
+A fork of the d3-sankey library (https://github.com/d3/d3-sankey) to allow circular links (ie cyclic graphs, like in [this example](https://bl.ocks.org/tomshanley/6eb025290888935f10b142e4bc576d8d)).
 
 The library contains a portion of code from Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043 to detect circular links. 
 
