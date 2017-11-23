@@ -606,17 +606,32 @@ function selectCircularLinkTypes(graph) {
       });
     }
   });
+
+  //correct self-linking links to be same direction as node
+  graph.links.forEach(function (link) {
+    if (link.circular) {
+      //if both source and target node are same type, then link should have same type
+      if (link.source.circularLinkType == link.target.circularLinkType) {
+        link.circularLinkType = link.source.circularLinkType;
+      }
+      //if link is selflinking, then link should have same type as node
+      if (selfLinking(link)) {
+        link.circularLinkType = link.source.circularLinkType;
+      }
+    }
+  });
 }
 
 // Checks if link creates a cycle
 function createsCycle(originalSource, nodeToCheck, graph) {
-  if (graph.length == 0) {
-    return false;
-  }
 
   // Check for self linking nodes
   if (originalSource.name == nodeToCheck.name) {
     return true;
+  }
+
+  if (graph.length == 0) {
+    return false;
   }
 
   var nextLinks = findLinksOutward(nodeToCheck, graph);
