@@ -336,7 +336,7 @@ import {linkHorizontal} from "d3-shape";
       y1 = y1 * scaleY;
 
       graph.nodes.forEach(function (node) {
-        node.x0 = x0 + (node.column * ((x1 - x0) / maxColumn) - dx)
+        node.x0 = x0 + (node.column * ((x1 - x0 - dx) / maxColumn))
         node.x1 = node.x0 + dx
       })
 
@@ -1562,7 +1562,7 @@ import {linkHorizontal} from "d3-shape";
   }
 
   // check if link is self linking, ie links a node to the same node
-  function selfLinking (link) {
+  function selfLinking (link, id) {
     return getNodeID(link.source, id) == getNodeID(link.target, id)
   }
 

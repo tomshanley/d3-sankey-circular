@@ -40,7 +40,7 @@
     "build-node": "babel src --out-dir dist",
     "clean": "rimraf dist && mkdirp dist",
     "build": "npm run clean && npm run build-node",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   },
   "keywords": [
     "d3"
