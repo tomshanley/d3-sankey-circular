@@ -89,9 +89,9 @@ import {linkHorizontal} from "d3-shape";
   // The main sankeyCircular functions
 
   // Some constants for circular link calculations
-  const verticalMargin = 25;
-  const baseRadius = 10;
-  const scale = 0.3; //Possibly let user control this, although anything over 0.5 starts to get too cramped
+  var verticalMargin = 25;
+  var baseRadius = 10;
+  var scale = 0.3; //Possibly let user control this, although anything over 0.5 starts to get too cramped
 
   export default function() {
     // Set the default values
@@ -146,7 +146,7 @@ import {linkHorizontal} from "d3-shape";
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
       // 8.  Adjust nodes that overlap links that span 2+ columns
 
-      let linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
+      var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
       for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
 
         sortSourceLinks(graph, y1, id)
@@ -277,12 +277,12 @@ import {linkHorizontal} from "d3-shape";
     }
 
     function getCircleMargins (graph) {
-      let totalTopLinksWidth = 0,
+      var totalTopLinksWidth = 0,
         totalBottomLinksWidth = 0,
         totalRightLinksWidth = 0,
         totalLeftLinksWidth = 0
 
-      let maxColumn = max(graph.nodes, function (node) {
+      var maxColumn = max(graph.nodes, function (node) {
         return node.column
       })
 
@@ -317,18 +317,18 @@ import {linkHorizontal} from "d3-shape";
     // Update the x0, y0, x1 and y1 for the sankeyCircular, to allow space for any circular links
     function scaleSankeySize (graph, margin) {
       
-      let maxColumn = max(graph.nodes, function (node) {
+      var maxColumn = max(graph.nodes, function (node) {
         return node.column
       })
 
-      let currentWidth = x1 - x0;
-      let currentHeight = y1 - y0;
+      var currentWidth = x1 - x0;
+      var currentHeight = y1 - y0;
 
-      let newWidth = currentWidth + margin.right + margin.left;
-      let newHeight = currentHeight + margin.top + margin.bottom;
+      var newWidth = currentWidth + margin.right + margin.left;
+      var newHeight = currentHeight + margin.top + margin.bottom;
 
-      let scaleX = currentWidth / newWidth;
-      let scaleY = currentHeight / newHeight;
+      var scaleX = currentWidth / newWidth;
+      var scaleY = currentHeight / newHeight;
       
       x0 = (x0 * scaleX) + (margin.left);
       x1 = margin.right == 0 ? x1 : x1 * scaleX;
@@ -413,9 +413,9 @@ import {linkHorizontal} from "d3-shape";
         
         //override py if nodePadding has been set
         if (paddingRatio) {
-          let padding = Infinity
+          var padding = Infinity
           columns.forEach(function (nodes) {
-            let thisPadding = y1 * paddingRatio / (nodes.length + 1)
+            var thisPadding = y1 * paddingRatio / (nodes.length + 1)
             padding = thisPadding < padding ? thisPadding : padding
           })
           py = padding
@@ -433,8 +433,8 @@ import {linkHorizontal} from "d3-shape";
         })
 
         //determine how much to scale down the chart, based on circular links
-        let margin = getCircleMargins(graph)
-        let ratio = scaleSankeySize(graph, margin);
+        var margin = getCircleMargins(graph)
+        var ratio = scaleSankeySize(graph, margin);
 
         //re-calculate widths
         ky = ky * ratio
@@ -475,11 +475,11 @@ import {linkHorizontal} from "d3-shape";
       // For each node in each column, check the node's vertical position in relation to its targets and sources vertical position
       // and shift up/down to be closer to the vertical middle of those targets and sources
       function relaxLeftAndRight (alpha, id) {
-        let columnsLength = columns.length
+        var columnsLength = columns.length
 
         columns.forEach(function (nodes, i) {
-          let n = nodes.length
-          let depth = nodes[0].depth
+          var n = nodes.length
+          var depth = nodes[0].depth
 
           nodes.forEach(function (node) {
             // check the node is not an orphan
@@ -487,23 +487,23 @@ import {linkHorizontal} from "d3-shape";
               if (node.partOfCycle && numberOfNonSelfLinkingCycles(node, id) > 0) {
 
               } else if (depth == 0 && n == 1) {
-                let nodeHeight = node.y1 - node.y0
+                var nodeHeight = node.y1 - node.y0
 
                 node.y0 = y1 / 2 - nodeHeight / 2
                 node.y1 = y1 / 2 + nodeHeight / 2
               } else if (depth == columnsLength - 1 && n == 1) {
-                let nodeHeight = node.y1 - node.y0
+                var nodeHeight = node.y1 - node.y0
 
                 node.y0 = y1 / 2 - nodeHeight / 2
                 node.y1 = y1 / 2 + nodeHeight / 2
               } else {
-                let avg = 0
+                var avg = 0
 
-                let avgTargetY = mean(
+                var avgTargetY = mean(
                   node.sourceLinks,
                   linkTargetCenter
                 )
-                let avgSourceY = mean(
+                var avgSourceY = mean(
                   node.targetLinks,
                   linkSourceCenter
                 )
@@ -514,7 +514,7 @@ import {linkHorizontal} from "d3-shape";
                   avg = avgTargetY || avgSourceY
                 }
 
-                let dy = (avg - nodeCenter(node)) * alpha
+                var dy = (avg - nodeCenter(node)) * alpha
                 // positive if it node needs to move down
                 node.y0 += dy
                 node.y1 += dy
@@ -624,8 +624,8 @@ import {linkHorizontal} from "d3-shape";
   // - if the source/target node already has circular links, then use the same type
   // - if not, choose the type with fewer links
   function selectCircularLinkTypes (graph, id) {
-    let numberOfTops = 0
-    let numberOfBottoms = 0
+    var numberOfTops = 0
+    var numberOfBottoms = 0
     graph.links.forEach(function (link) {
       if (link.circular) {
         // if either souce or target has type already use that
@@ -721,8 +721,8 @@ import {linkHorizontal} from "d3-shape";
 
   // Return the angle between a straight line between the source and target of the link, and the vertical plane of the node
   function linkAngle (link) {
-    let adjacent = Math.abs(link.y1 - link.y0)
-    let opposite = Math.abs(link.target.x0 - link.source.x1)
+    var adjacent = Math.abs(link.y1 - link.y0)
+    var opposite = Math.abs(link.target.x0 - link.source.x1)
 
     return Math.atan(opposite / adjacent)
   }
@@ -740,14 +740,14 @@ import {linkHorizontal} from "d3-shape";
 
   // Return the number of circular links for node, not including self linking links
   function numberOfNonSelfLinkingCycles (node, id) {
-    let sourceCount = 0
+    var sourceCount = 0
     node.sourceLinks.forEach(function (l) {
       sourceCount = l.circular && !selfLinking(l, id)
         ? sourceCount + 1
         : sourceCount
     })
 
-    let targetCount = 0
+    var targetCount = 0
     node.targetLinks.forEach(function (l) {
       targetCount = l.circular && !selfLinking(l, id)
         ? targetCount + 1
@@ -759,14 +759,14 @@ import {linkHorizontal} from "d3-shape";
 
   // Check if a circular link is the only circular link for both its source and target node
   function onlyCircularLink (link) {
-    let nodeSourceLinks = link.source.sourceLinks
-    let sourceCount = 0
+    var nodeSourceLinks = link.source.sourceLinks
+    var sourceCount = 0
     nodeSourceLinks.forEach(function (l) {
       sourceCount = l.circular ? sourceCount + 1 : sourceCount
     })
 
-    let nodeTargetLinks = link.target.targetLinks
-    let targetCount = 0
+    var nodeTargetLinks = link.target.targetLinks
+    var targetCount = 0
     nodeTargetLinks.forEach(function (l) {
       targetCount = l.circular ? targetCount + 1 : targetCount
     })
@@ -782,15 +782,15 @@ import {linkHorizontal} from "d3-shape";
   function calcVerticalBuffer (links, circularLinkGap, id) {
     links.sort(sortLinkColumnAscending)
     links.forEach(function (link, i) {
-      let buffer = 0
+      var buffer = 0
 
       if (selfLinking(link, id) && onlyCircularLink(link)) {
         link.circularPathData.verticalBuffer = buffer + link.width / 2
       } else {
-        let j = 0
+        var j = 0
         for (j; j < i; j++) {
           if (circularLinksCross(links[i], links[j])) {
-            let bufferOverThisLink =
+            var bufferOverThisLink =
               links[j].circularPathData.verticalBuffer +
               links[j].width / 2 +
               circularLinkGap
@@ -807,11 +807,11 @@ import {linkHorizontal} from "d3-shape";
 
   // calculate the optimum path for a link to reduce overlaps
   function addCircularPathData (graph, circularLinkGap, y1, id) {
-    //let baseRadius = 10
-    let buffer = 5
-    //let verticalMargin = 25
+    //var baseRadius = 10
+    var buffer = 5
+    //var verticalMargin = 25
 
-    let minY = min(graph.links, function (link) {
+    var minY = min(graph.links, function (link) {
       return link.source.y0
     })
 
@@ -823,12 +823,12 @@ import {linkHorizontal} from "d3-shape";
     })
 
     // calc vertical offsets per top/bottom links
-    let topLinks = graph.links.filter(function (l) {
+    var topLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'top'
     })
     topLinks = calcVerticalBuffer(topLinks, circularLinkGap, id)
 
-    let bottomLinks = graph.links.filter(function (l) {
+    var bottomLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'bottom'
     })
     bottomLinks = calcVerticalBuffer(bottomLinks, circularLinkGap, id)
@@ -865,9 +865,9 @@ import {linkHorizontal} from "d3-shape";
         } else {
           // else calculate normally
           // add left extent coordinates, based on links with same source column and circularLink type
-          let thisColumn = link.source.column
-          let thisCircularLinkType = link.circularLinkType
-          let sameColumnLinks = graph.links.filter(function (l) {
+          var thisColumn = link.source.column
+          var thisCircularLinkType = link.circularLinkType
+          var sameColumnLinks = graph.links.filter(function (l) {
             return (
               l.source.column == thisColumn &&
               l.circularLinkType == thisCircularLinkType
@@ -880,7 +880,7 @@ import {linkHorizontal} from "d3-shape";
             sameColumnLinks.sort(sortLinkSourceYAscending)
           }
 
-          let radiusOffset = 0
+          var radiusOffset = 0
           sameColumnLinks.forEach(function (l, i) {
             if (l.circularLinkID == link.circularLinkID) {
               link.circularPathData.leftSmallArcRadius = baseRadius + link.width / 2 + radiusOffset
@@ -942,13 +942,13 @@ import {linkHorizontal} from "d3-shape";
       } else {
         var normalPath = linkHorizontal()
           .source(function (d) {
-            let x = d.source.x0 + (d.source.x1 - d.source.x0)
-            let y = d.y0
+            var x = d.source.x0 + (d.source.x1 - d.source.x0)
+            var y = d.y0
             return [x, y]
           })
           .target(function (d) {
-            let x = d.target.x0
-            let y = d.y1
+            var x = d.target.x0
+            var y = d.y1
             return [x, y]
           })
         link.path = normalPath(link)
@@ -959,8 +959,8 @@ import {linkHorizontal} from "d3-shape";
 
   // create a d path using the addCircularPathData
   function createCircularPathString (link) {
-    let pathString = ''
-    let pathData = {}
+    var pathString = ''
+    var pathData = {}
 
     if (link.circularLinkType == 'top') {
       pathString =
@@ -1180,13 +1180,13 @@ import {linkHorizontal} from "d3-shape";
   // * approx, based on a straight line from target to source, when in fact the path is a bezier
   function linkPerpendicularYToLinkSource (longerLink, shorterLink) {
     // get the angle for the longer link
-    let angle = linkAngle(longerLink)
+    var angle = linkAngle(longerLink)
 
     // get the adjacent length to the other link's x position
-    let heightFromY1ToPependicular = linkXLength(shorterLink) / Math.tan(angle)
+    var heightFromY1ToPependicular = linkXLength(shorterLink) / Math.tan(angle)
 
     // add or subtract from longer link1's original y1, depending on the slope
-    let yPerpendicular = incline(longerLink) == 'up'
+    var yPerpendicular = incline(longerLink) == 'up'
       ? longerLink.y1 + heightFromY1ToPependicular
       : longerLink.y1 - heightFromY1ToPependicular
 
@@ -1197,13 +1197,13 @@ import {linkHorizontal} from "d3-shape";
   // * approx, based on a straight line from target to source, when in fact the path is a bezier
   function linkPerpendicularYToLinkTarget (longerLink, shorterLink) {
     // get the angle for the longer link
-    let angle = linkAngle(longerLink)
+    var angle = linkAngle(longerLink)
 
     // get the adjacent length to the other link's x position
-    let heightFromY1ToPependicular = linkXLength(shorterLink) / Math.tan(angle)
+    var heightFromY1ToPependicular = linkXLength(shorterLink) / Math.tan(angle)
 
     // add or subtract from longer link's original y1, depending on the slope
-    let yPerpendicular = incline(longerLink) == 'up'
+    var yPerpendicular = incline(longerLink) == 'up'
       ? longerLink.y1 - heightFromY1ToPependicular
       : longerLink.y1 + heightFromY1ToPependicular
 
@@ -1219,11 +1219,11 @@ import {linkHorizontal} from "d3-shape";
       }
 
       if (link.target.column - link.source.column > 1) {
-        let columnToTest = link.source.column + 1
-        let maxColumnToTest = link.target.column - 1
+        var columnToTest = link.source.column + 1
+        var maxColumnToTest = link.target.column - 1
 
-        let i = 1
-        let numberOfColumnsToTest = maxColumnToTest - columnToTest + 1
+        var i = 1
+        var numberOfColumnsToTest = maxColumnToTest - columnToTest + 1
 
         for (
           columnToTest, (i = 1);
@@ -1232,29 +1232,29 @@ import {linkHorizontal} from "d3-shape";
         ) {
           graph.nodes.forEach(function (node) {
             if (node.column == columnToTest) {
-              let t = i / (numberOfColumnsToTest + 1)
+              var t = i / (numberOfColumnsToTest + 1)
 
               // Find all the points of a cubic bezier curve in javascript
               // https://stackoverflow.com/questions/15397596/find-all-the-points-of-a-cubic-bezier-curve-in-javascript
 
-              let B0_t = Math.pow(1 - t, 3)
-              let B1_t = 3 * t * Math.pow(1 - t, 2)
-              let B2_t = 3 * Math.pow(t, 2) * (1 - t)
-              let B3_t = Math.pow(t, 3)
+              var B0_t = Math.pow(1 - t, 3)
+              var B1_t = 3 * t * Math.pow(1 - t, 2)
+              var B2_t = 3 * Math.pow(t, 2) * (1 - t)
+              var B3_t = Math.pow(t, 3)
 
-              let py_t =
+              var py_t =
                 B0_t * link.y0 +
                 B1_t * link.y0 +
                 B2_t * link.y1 +
                 B3_t * link.y1
 
-              let linkY0AtColumn = py_t - (link.width / 2)
-              let linkY1AtColumn = py_t + (link.width / 2)
+              var linkY0AtColumn = py_t - (link.width / 2)
+              var linkY1AtColumn = py_t + (link.width / 2)
 
               // If top of link overlaps node, push node up
               if (linkY0AtColumn > node.y0 && linkY0AtColumn < node.y1) {
 
-                let dy = node.y1 - linkY0AtColumn + 10
+                var dy = node.y1 - linkY0AtColumn + 10
                 dy = node.circularLinkType == 'bottom' ? dy : -dy
 
                 node = adjustNodeHeight(node, dy, y0, y1)
@@ -1274,7 +1274,7 @@ import {linkHorizontal} from "d3-shape";
                 })
               } else if (linkY1AtColumn > node.y0 && linkY1AtColumn < node.y1) {
                 // If bottom of link overlaps node, push node down
-                let dy = linkY1AtColumn - node.y0 + 10
+                var dy = linkY1AtColumn - node.y0 + 10
 
                 node = adjustNodeHeight(node, dy, y0, y1)
 
@@ -1293,7 +1293,7 @@ import {linkHorizontal} from "d3-shape";
                 })
               } else if (linkY0AtColumn < node.y0 && linkY1AtColumn > node.y1) {
                 // if link completely overlaps node
-                let dy = linkY1AtColumn - node.y0 + 10
+                var dy = linkY1AtColumn - node.y0 + 10
 
                 node = adjustNodeHeight(node, dy, y0, y1)
 
@@ -1358,11 +1358,11 @@ import {linkHorizontal} from "d3-shape";
         node.y = node.y - (node.y + (node.y1 - node.y0) - y1)
       }
 
-      let nodesSourceLinks = graph.links.filter(function (l) {
+      var nodesSourceLinks = graph.links.filter(function (l) {
         return getNodeID(l.source, id) == getNodeID(node, id)
       })
 
-      let nodeSourceLinksLength = nodesSourceLinks.length
+      var nodeSourceLinksLength = nodesSourceLinks.length
 
       // if more than 1 link then sort
       if (nodeSourceLinksLength > 1) {
@@ -1379,11 +1379,11 @@ import {linkHorizontal} from "d3-shape";
               // if the links slope in same directions, then sort by any overlap
             } else {
               if (link1.target.column > link2.target.column) {
-                let link2Adj = linkPerpendicularYToLinkTarget(link2, link1)
+                var link2Adj = linkPerpendicularYToLinkTarget(link2, link1)
                 return link1.y1 - link2Adj
               }
               if (link2.target.column > link1.target.column) {
-                let link1Adj = linkPerpendicularYToLinkTarget(link1, link2)
+                var link1Adj = linkPerpendicularYToLinkTarget(link1, link2)
                 return link1Adj - link2.y1
               }
             }
@@ -1431,7 +1431,7 @@ import {linkHorizontal} from "d3-shape";
       }
 
       // update y0 for links
-      let ySourceOffset = node.y0
+      var ySourceOffset = node.y0
 
       nodesSourceLinks.forEach(function (link) {
         link.y0 = ySourceOffset + link.width / 2
@@ -1441,8 +1441,8 @@ import {linkHorizontal} from "d3-shape";
       // correct any circular bottom links so they are at the bottom of the node
       nodesSourceLinks.forEach(function (link, i) {
         if (link.circularLinkType == 'bottom') {
-          let j = i + 1
-          let offsetFromBottom = 0
+          var j = i + 1
+          var offsetFromBottom = 0
           // sum the widths of any links that are below this link
           for (j; j < nodeSourceLinksLength; j++) {
             offsetFromBottom = offsetFromBottom + nodesSourceLinks[j].width
@@ -1456,11 +1456,11 @@ import {linkHorizontal} from "d3-shape";
   // sort and set the links' y1 for each node
   function sortTargetLinks (graph, y1, id) {
     graph.nodes.forEach(function (node) {
-      let nodesTargetLinks = graph.links.filter(function (l) {
+      var nodesTargetLinks = graph.links.filter(function (l) {
         return getNodeID(l.target, id) == getNodeID(node, id)
       })
 
-      let nodesTargetLinksLength = nodesTargetLinks.length
+      var nodesTargetLinksLength = nodesTargetLinks.length
 
       if (nodesTargetLinksLength > 1) {
         nodesTargetLinks.sort(function (link1, link2) {
@@ -1473,12 +1473,12 @@ import {linkHorizontal} from "d3-shape";
             } else {
               // get the angle of the link to the further source node (ie the smaller column)
               if (link2.source.column < link1.source.column) {
-                let link2Adj = linkPerpendicularYToLinkSource(link2, link1)
+                var link2Adj = linkPerpendicularYToLinkSource(link2, link1)
 
                 return link1.y0 - link2Adj
               }
               if (link1.source.column < link2.source.column) {
-                let link1Adj = linkPerpendicularYToLinkSource(link1, link2)
+                var link1Adj = linkPerpendicularYToLinkSource(link1, link2)
 
                 return link1Adj - link2.y0
               }
@@ -1527,7 +1527,7 @@ import {linkHorizontal} from "d3-shape";
       }
 
       // update y1 for links
-      let yTargetOffset = node.y0
+      var yTargetOffset = node.y0
 
       nodesTargetLinks.forEach(function (link) {
         link.y1 = yTargetOffset + link.width / 2
@@ -1537,8 +1537,8 @@ import {linkHorizontal} from "d3-shape";
       // correct any circular bottom links so they are at the bottom of the node
       nodesTargetLinks.forEach(function (link, i) {
         if (link.circularLinkType == 'bottom') {
-          let j = i + 1
-          let offsetFromBottom = 0
+          var j = i + 1
+          var offsetFromBottom = 0
           // sum the widths of any links that are below this link
           for (j; j < nodesTargetLinksLength; j++) {
             offsetFromBottom = offsetFromBottom + nodesTargetLinks[j].width
