@@ -4,7 +4,7 @@
 <head>
 
   <script src="https://d3js.org/d3.v4.min.js"></script>
-  <script src="../d3-sankey-circular.js"></script>
+  <script src="../compiled/d3-sankey-circular.js"></script>
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
   <script src="example-data.js"></script>
 
@@ -42,18 +42,18 @@
     var width = 1100;
     var height = 600;
 
-    let data = data2;
-    var sankey = d3.sankey()
+    let data = data1;
+    var sankey = d3.sankeyCircular()
       .nodeWidth(10)
-      .nodePadding(40) //note that this will be overridden by nodePaddingRatio
-      .nodePaddingRatio(0.5)
+      .nodePadding(20) //note that this will be overridden by nodePaddingRatio
+      //.nodePaddingRatio(0.5)
       .size([width, height])
       .nodeId(function (d) {
         return d.name;
       })
       .nodeAlign(d3.sankeyJustify)
-      .iterations(32)
-      .circularLinkGap(2);
+      .iterations(5)
+      .circularLinkGap(1);
 
     var svg = d3.select("#chart").append("svg")
       .attr("width", width + margin.left + margin.right)
@@ -136,7 +136,9 @@
     
     link.append("path") 
       .attr("class", "sankey-link")
-      .attr("d", sankeyPath)
+      .attr("d", function(link){
+        return link.path;
+      })
       .style("stroke-width", function (d) { return Math.max(1, d.width); })
       .style("opacity", 0.7)
       .style("stroke", function (link, i) {
@@ -149,12 +151,7 @@
       });
 
 
-    //ARROWS
-    var arrowsG = linkG.data(sankeyLinks)
-      .enter()
-      .append("g")
-      .attr("class", "g-arrow")
-      .call(appendArrows, 20, 300, 4) //arrow length, gap, arrow head size
+  
 
     function highlightNodes(node, name) {
 

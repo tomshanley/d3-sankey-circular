@@ -398,7 +398,7 @@ let data2 = {
         { "source": "process5-6", "target": "finish", "value": 1 },
         { "source": "process5-7", "target": "finish", "value": 5 },
         { "source": "process5-8", "target": "finish", "value": 4 },
-        { "source": "process5-8", "target": "start", "value": 4 },
+        { "source": "process5-8", "target": "process1-2", "value": 4 },
         { "source": "process5-9", "target": "finish", "value": 4 }
 
 
