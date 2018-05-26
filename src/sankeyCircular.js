@@ -123,11 +123,6 @@ import {linkHorizontal} from "d3-shape";
       // 2.  Determine which links result in a circular path in the graph
       identifyCircles(graph, id)
 
-      // 3.  Determine how the circular links will be drawn,
-      //     either travelling back above the main chart ("top")
-      //     or below the main chart ("bottom")
-      selectCircularLinkTypes(graph, id)
-
       // 4. Calculate the nodes' values, based on the values of the incoming and outgoing links
       computeNodeValues(graph)
 
@@ -137,6 +132,11 @@ import {linkHorizontal} from "d3-shape";
       //     - column: the depth (0, 1, 2, etc), as is relates to visual position from left to right
       //     - x0, x1: the x coordinates, as is relates to visual position from left to right
       computeNodeDepths(graph)
+
+      // 3.  Determine how the circular links will be drawn,
+      //     either travelling back above the main chart ("top")
+      //     or below the main chart ("bottom")
+      selectCircularLinkTypes(graph, id)
 
       // 6.  Calculate the nodes' and links' vertical position within their respective column
       //     Also readjusts sankeyCircular size if circular links are needed, and node x's
@@ -156,6 +156,9 @@ import {linkHorizontal} from "d3-shape";
         sortTargetLinks(graph, y1, id)
 
       }
+      
+      // 8.1  Adjust node and link positions back to fill height of chart area if compressed
+      fillHeight(graph, y0, y1)
 
       // 9. Calculate visually appealling path for the circular paths, and create the "d" string
       addCircularPathData(graph, circularLinkGap, y1, id)
@@ -163,12 +166,7 @@ import {linkHorizontal} from "d3-shape";
       return graph
     } // end of sankeyCircular function
 
-    // TODO - update this function to take into account circular changes
-    /*sankeyCircular.update = function (graph) {
-      computeLinkBreadths(graph)
-      return graph
-    }*/
-
+    
     // Set the sankeyCircular parameters
     // nodeID, nodeAlign, nodeWidth, nodePadding, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
     sankeyCircular.nodeId = function (_) {
@@ -446,7 +444,13 @@ import {linkHorizontal} from "d3-shape";
         columns.forEach(function (nodes) {
           var nodesLength = nodes.length
           nodes.forEach(function (node, i) {
-            if (node.partOfCycle) {
+            if (node.depth == (columns.length - 1) && nodesLength == 1) {
+              node.y0 = y1 / 2 - (node.value * ky)
+              node.y1 = node.y0 + node.value * ky
+            } else if (node.depth == 0 && nodesLength == 1) {
+              node.y0 = y1 / 2 - (node.value * ky)
+              node.y1 = node.y0 + node.value * ky
+            } else if (node.partOfCycle) {
               if (numberOfNonSelfLinkingCycles(node, id) == 0) {
                 node.y0 = y1 / 2 + i
                 node.y1 = node.y0 + node.value * ky
@@ -1564,6 +1568,41 @@ import {linkHorizontal} from "d3-shape";
   // check if link is self linking, ie links a node to the same node
   function selfLinking (link, id) {
     return getNodeID(link.source, id) == getNodeID(link.target, id)
+  }
+
+  function fillHeight(graph, y0, y1) {
+    
+    var nodes = graph.nodes
+    var links = graph.links
+
+    links.forEach(function(link){
+      if (link.circularLinkType == "top") {
+        top = true
+      } else if (link.circularLinkType == "bottom") {
+        bottom = true
+      }
+    })
+    
+    if (top == false || bottom == false) {
+      var minY0 = d3.min(nodes, function(node){ return node.y0 })
+      var maxY1 = d3.max(nodes, function(node){ return node.y1 })
+      var currentHeight = maxY1 - minY0
+      var chartHeight = y1 - y0
+      var ratio = chartHeight/currentHeight
+      
+      nodes.forEach(function(node){
+        var nodeHeight = (node.y1 - node.y0) * ratio
+        node.y0 = (node.y0 - minY0) * ratio
+        node.y1 = node.y0 + nodeHeight
+      })
+      
+      links.forEach(function(link) {
+        link.y0 = (link.y0 - minY0) * ratio
+        link.y1 = (link.y1 - minY0) * ratio
+        link.width = link.width * ratio
+      })  
+    }
+
   }
 
   /// ////////////////////////////////////////////////////////////////////////////
