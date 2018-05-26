@@ -1382,6 +1382,9 @@ function fillHeight(graph, y0, y1) {
   var nodes = graph.nodes;
   var links = graph.links;
 
+  var top = false;
+  var bottom = false;
+
   links.forEach(function (link) {
     if (link.circularLinkType == "top") {
       top = true;
@@ -1391,10 +1394,10 @@ function fillHeight(graph, y0, y1) {
   });
 
   if (top == false || bottom == false) {
-    var minY0 = d3.min(nodes, function (node) {
+    var minY0 = (0, _d3Array.min)(nodes, function (node) {
       return node.y0;
     });
-    var maxY1 = d3.max(nodes, function (node) {
+    var maxY1 = (0, _d3Array.max)(nodes, function (node) {
       return node.y1;
     });
     var currentHeight = maxY1 - minY0;

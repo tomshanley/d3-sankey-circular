@@ -1575,6 +1575,9 @@ import {linkHorizontal} from "d3-shape";
     var nodes = graph.nodes
     var links = graph.links
 
+    var top = false
+    var bottom = false
+
     links.forEach(function(link){
       if (link.circularLinkType == "top") {
         top = true
@@ -1584,8 +1587,8 @@ import {linkHorizontal} from "d3-shape";
     })
     
     if (top == false || bottom == false) {
-      var minY0 = d3.min(nodes, function(node){ return node.y0 })
-      var maxY1 = d3.max(nodes, function(node){ return node.y1 })
+      var minY0 = min(nodes, function(node){ return node.y0 })
+      var maxY1 = max(nodes, function(node){ return node.y1 })
       var currentHeight = maxY1 - minY0
       var chartHeight = y1 - y0
       var ratio = chartHeight/currentHeight

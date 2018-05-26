@@ -332,7 +332,7 @@
         totalRightLinksWidth = 0,
         totalLeftLinksWidth = 0
 
-      let maxColumn = d3.max(graph.nodes, function (node) {
+      let maxColumn = d3Array.max(graph.nodes, function (node) {
         return node.column
       })
 
@@ -367,7 +367,7 @@
     // Update the x0, y0, x1 and y1 for the sankey, to allow space for any circular links
     function scaleSankeySize (graph, margin) {
 
-      let maxColumn = d3.max(graph.nodes, function (node) {
+      let maxColumn = d3Array.max(graph.nodes, function (node) {
         return node.column
       })
       
@@ -873,7 +873,7 @@
     let buffer = 5
     //let verticalMargin = 25
 
-    let minY = d3.min(graph.links, function (link) {
+    let minY = d3Array.min(graph.links, function (link) {
       return link.source.y0
     })
 
@@ -999,7 +999,7 @@
       if (link.circular) {
         link.path = createCircularPathString(link)
       } else {
-        var normalPath = d3.linkHorizontal()
+        var normalPath = d3Shape.linkHorizontal()
           .source(function (d) {
             let x = d.source.x0 + (d.source.x1 - d.source.x0)
             let y = d.y0
@@ -1643,8 +1643,8 @@
     })
     
     if (top == false || bottom == false) {
-      var minY0 = d3.min(nodes, function(node){ return node.y0 })
-      var maxY1 = d3.max(nodes, function(node){ return node.y1 })
+      var minY0 = d3Array.min(nodes, function(node){ return node.y0 })
+      var maxY1 = d3Array.max(nodes, function(node){ return node.y1 })
       var currentHeight = maxY1 - minY0
       var chartHeight = y1 - y0
       var ratio = chartHeight/currentHeight
