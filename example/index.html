@@ -91,7 +91,10 @@
       .append("g");
 
     node.append("rect")
-      .attr("x", function (d) { return d.x0; })
+      .attr("x", function (d) { 
+        console.log('d from rect x', d)
+        return d.x0; 
+      })
       .attr("y", function (d) { return d.y0; })
       .attr("height", function (d) { return d.y1 - d.y0; })
       .attr("width", function (d) { return d.x1 - d.x0; })
