@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
+    "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.7.0",
     "derequire": "^2.0.6",
     "mkdirp": "^0.5.1",
@@ -46,8 +47,12 @@
     "build": "npm run clean && rollup -c",
     "prepare": "npm run build"
   },
-  "files": ["dist"],
-  "keywords": ["d3"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "d3"
+  ],
   "bugs": {
     "url": "https://github.com/tomshanley/d3-sankey-circular/issues"
   },
