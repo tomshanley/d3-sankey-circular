@@ -9,10 +9,10 @@ export default [
     entry: 'src/index.js',
     dest: pkg.browser,
     format: 'umd',
-    moduleName: pkg.name,
+    moduleName: 'd3',
     plugins: [
-      resolve(), // so Rollup can find `ms`
-      commonjs(), // so Rollup can convert `ms` to an ES module
+      resolve(), // so Rollup can find `d3`
+      commonjs(), // so Rollup can convert `d3` to an ES module
       babel({
         exclude: ['node_modules/**']
       })
@@ -26,7 +26,7 @@ export default [
   // the `targets` option which can specify `dest` and `format`)
   {
     entry: 'src/index.js',
-    external: ['ms'],
+    external: ['d3-array', 'd3', 'd3-collection:d3', 'd3-shape:d3'],
     targets: [
       { dest: pkg.main, format: 'cjs' },
       { dest: pkg.module, format: 'es' }
