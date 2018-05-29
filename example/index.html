@@ -4,7 +4,7 @@
 <head>
 
   <script src="https://d3js.org/d3.v4.min.js"></script>
-  <script src="../compiled/d3-sankey-circular.js"></script>
+  <script src="../dist/d3-sankey-circular.js"></script>
   <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
   <script src="example-data.js"></script>
 
@@ -38,6 +38,8 @@
   <div id="chart"></div>
 
   <script>
+    d3.sankeyCircular = sankeyCircular.sankeyCircular
+    console.log('d3 from example', d3)
     var margin = { top: 30, right: 30, bottom: 30, left: 30};
     var width = 1100;
     var height = 500;
