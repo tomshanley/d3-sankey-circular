@@ -25,7 +25,7 @@ export default [
   // builds from a single configuration where possible, using
   // the `targets` option which can specify `dest` and `format`)
   {
-    entry: 'src/main.js',
+    entry: 'src/index.js',
     external: ['ms'],
     targets: [
       { dest: pkg.main, format: 'cjs' },
