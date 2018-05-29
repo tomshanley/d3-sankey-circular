@@ -19,6 +19,7 @@
     "babel-cli": "^6.26.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.7.0",
+    "babelrc-rollup": "^3.0.0",
     "derequire": "^2.0.6",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.6.2",

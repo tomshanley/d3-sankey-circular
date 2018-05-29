@@ -1,7 +1,10 @@
 import resolve from 'rollup-plugin-node-resolve'
 import commonjs from 'rollup-plugin-commonjs'
 import babel from 'rollup-plugin-babel'
+import babelrc from 'babelrc-rollup'
 import pkg from './package.json'
+
+let external = Object.keys(pkg.dependencies)
 
 export default [
   // browser-friendly UMD build
@@ -13,13 +16,11 @@ export default [
       format: 'umd',
       globals: ['d3-array', 'd3', 'd3-collection:d3', 'd3-shape:d3']
     },
-    external: ['d3-array', 'd3', 'd3-collection', 'd3-shape'],
+    external,
     plugins: [
       resolve(), // so Rollup can find `d3`
       commonjs(), // so Rollup can convert `d3` to an ES module
-      babel({
-        exclude: ['node_modules/**']
-      })
+      babel(babelrc())
     ]
   },
 
@@ -35,21 +36,27 @@ export default [
         file: pkg.main,
         format: 'es',
         name: 'd3SankeyCircular',
-        globals: ['d3-array', 'd3', 'd3-collection:d3', 'd3-shape:d3']
+        globals: {
+          'd3-collection': 'd3',
+          'd3-array': 'd3',
+          'd3-interpolate': 'd3',
+          'd3-path': 'd3'
+        }
       },
       {
         file: pkg.module,
         format: 'es',
         name: 'd3SankeyCircular',
-        globals: ['d3-array', 'd3', 'd3-collection:d3', 'd3-shape:d3']
+        globals: {
+          'd3-collection': 'd3',
+          'd3-array': 'd3',
+          'd3-interpolate': 'd3',
+          'd3-path': 'd3'
+        }
       }
     ],
-    external: ['d3-array', 'd3', 'd3-collection', 'd3-shape'],
+    external,
 
-    plugins: [
-      babel({
-        exclude: ['node_modules/**']
-      })
-    ]
+    plugins: [babel(babel(babelrc()))]
   }
 ]
