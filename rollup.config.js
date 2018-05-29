@@ -6,7 +6,7 @@ import pkg from './package.json'
 export default [
   // browser-friendly UMD build
   {
-    entry: 'src/main.js',
+    entry: 'src/index.js',
     dest: pkg.browser,
     format: 'umd',
     moduleName: 'howLongUntilLunch',
