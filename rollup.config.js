@@ -6,10 +6,8 @@ import pkg from './package.json'
 export default [
   // browser-friendly UMD build
   {
-    entry: 'src/index.js',
-    dest: pkg.browser,
-    format: 'umd',
-    moduleName: 'd3',
+    input: 'src/index.js',
+    output: { file: pkg.main, name: 'd3', format: 'umd' },
     plugins: [
       resolve(), // so Rollup can find `d3`
       commonjs(), // so Rollup can convert `d3` to an ES module
@@ -25,11 +23,12 @@ export default [
   // builds from a single configuration where possible, using
   // the `targets` option which can specify `dest` and `format`)
   {
-    entry: 'src/index.js',
+    input: 'src/index.js',
+    output: { file: 'dist/d3-sankey-circular.mjs' },
     external: ['d3-array', 'd3', 'd3-collection:d3', 'd3-shape:d3'],
-    targets: [
-      { dest: pkg.main, format: 'cjs' },
-      { dest: pkg.module, format: 'es' }
+    output: [
+      { file: pkg.main, format: 'cjs' },
+      { file: pkg.module, format: 'es' }
     ],
     plugins: [
       babel({
