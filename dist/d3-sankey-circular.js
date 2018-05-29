@@ -1,12 +1,40 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+import { min, ascending, max, mean, sum } from 'd3-array';
+import { map, nest } from 'd3-collection';
+import { linkHorizontal } from 'd3-shape';
 
-// https://github.com/tomshanley/d3-sankeyCircular-circular
-// fork of https://github.com/d3/d3-sankeyCircular copyright Mike Bostock
-import { ascending, min, max, mean, sum } from "d3-array";
-import { map, nest } from "d3-collection";
-import { justify } from "./align";
-import constant from "./constant";
-import { linkHorizontal } from "d3-shape";
+// For a given link, return the target node's depth
+function targetDepth(d) {
+  return d.target.depth;
+}
+
+// The depth of a node when the nodeAlign (align) is set to 'left'
+function left(node) {
+  return node.depth;
+}
+
+// The depth of a node when the nodeAlign (align) is set to 'right'
+function right(node, n) {
+  return n - 1 - node.height;
+}
+
+// The depth of a node when the nodeAlign (align) is set to 'justify'
+function justify(node, n) {
+  return node.sourceLinks.length ? node.depth : n - 1;
+}
+
+// The depth of a node when the nodeAlign (align) is set to 'center'
+function center(node) {
+  return node.targetLinks.length ? node.depth : node.sourceLinks.length ? min(node.sourceLinks, targetDepth) - 1 : 0;
+}
+
+// returns a function, using the parameter given to the sankey setting
+function constant(x) {
+  return function () {
+    return x;
+  };
+}
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
 function ascendingSourceBreadth(a, b) {
@@ -94,7 +122,7 @@ var verticalMargin = 25;
 var baseRadius = 10;
 var scale = 0.3; //Possibly let user control this, although anything over 0.5 starts to get too cramped
 
-export default function () {
+function sankeyCircular () {
   // Set the default values
   var x0 = 0,
       y0 = 0,
@@ -455,7 +483,7 @@ export default function () {
         nodes.forEach(function (node) {
           // check the node is not an orphan
           if (node.sourceLinks.length || node.targetLinks.length) {
-            if (node.partOfCycle && numberOfNonSelfLinkingCycles(node, id) > 0) {} else if (depth == 0 && n == 1) {
+            if (node.partOfCycle && numberOfNonSelfLinkingCycles(node, id) > 0) ; else if (depth == 0 && n == 1) {
               var nodeHeight = node.y1 - node.y0;
 
               node.y0 = y1 / 2 - nodeHeight / 2;
@@ -513,7 +541,7 @@ export default function () {
         // If the bottommost node goes outside the bounds, push it back up.
         dy = y - py - y1;
         if (dy > 0) {
-          ;y = node.y0 -= dy, node.y1 -= dy;
+y = node.y0 -= dy, node.y1 -= dy;
 
           // Push any overlapping nodes back up.
           for (i = n - 2; i >= 0; --i) {
@@ -900,7 +928,6 @@ function addCircularPathData(graph, circularLinkGap, y1, id) {
 // create a d path using the addCircularPathData
 function createCircularPathString(link) {
   var pathString = '';
-  var pathData = {};
 
   if (link.circularLinkType == 'top') {
     pathString =
@@ -1053,7 +1080,7 @@ function resolveNodeLinkOverlaps(graph, y0, y1, id) {
       var i = 1;
       var numberOfColumnsToTest = maxColumnToTest - columnToTest + 1;
 
-      for (columnToTest, i = 1; columnToTest <= maxColumnToTest; columnToTest++, i++) {
+      for (i = 1; columnToTest <= maxColumnToTest; columnToTest++, i++) {
         graph.nodes.forEach(function (node) {
           if (node.column == columnToTest) {
             var t = i / (numberOfColumnsToTest + 1);
@@ -1414,3 +1441,5 @@ exports.sankeyLeft = left
 exports.sankeyRight = right
 exports.sankeyJustify = justify
  Object.defineProperty(exports, '__esModule', { value: true })*/
+
+export { sankeyCircular, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
