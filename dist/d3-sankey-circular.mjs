@@ -88,12 +88,12 @@ function linkTargetCenter(link) {
 }
 
 /* function weightedSource (link) {
-  return nodeCenter(link.source) * link.value
-} */
+    return nodeCenter(link.source) * link.value
+  } */
 
 /* function weightedTarget (link) {
-  return nodeCenter(link.target) * link.value
-} */
+    return nodeCenter(link.target) * link.value
+  } */
 
 // Return the default value for ID for node, d.index
 function defaultId(d) {
@@ -185,7 +185,6 @@ function sankeyCircular () {
 
     var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
     for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
-
       sortSourceLinks(graph, y1, id);
       sortTargetLinks(graph, y1, id);
       resolveNodeLinkOverlaps(graph, y0, y1, id);
@@ -201,7 +200,6 @@ function sankeyCircular () {
 
     return graph;
   } // end of sankeyCircular function
-
 
   // Set the sankeyCircular parameters
   // nodeID, nodeAlign, nodeWidth, nodePadding, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
@@ -262,10 +260,10 @@ function sankeyCircular () {
       link.index = i;
       var source = link.source;
       var target = link.target;
-      if ((typeof source === "undefined" ? "undefined" : _typeof(source)) !== 'object') {
+      if ((typeof source === 'undefined' ? 'undefined' : _typeof(source)) !== 'object') {
         source = link.source = find(nodeById, source);
       }
-      if ((typeof target === "undefined" ? "undefined" : _typeof(target)) !== 'object') {
+      if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== 'object') {
         target = link.target = find(nodeById, target);
       }
       source.sourceLinks.push(link);
@@ -327,12 +325,16 @@ function sankeyCircular () {
     totalRightLinksWidth = totalRightLinksWidth > 0 ? totalRightLinksWidth + verticalMargin + baseRadius : totalRightLinksWidth;
     totalLeftLinksWidth = totalLeftLinksWidth > 0 ? totalLeftLinksWidth + verticalMargin + baseRadius : totalLeftLinksWidth;
 
-    return { "top": totalTopLinksWidth, "bottom": totalBottomLinksWidth, "left": totalLeftLinksWidth, "right": totalRightLinksWidth };
+    return {
+      top: totalTopLinksWidth,
+      bottom: totalBottomLinksWidth,
+      left: totalLeftLinksWidth,
+      right: totalRightLinksWidth
+    };
   }
 
   // Update the x0, y0, x1 and y1 for the sankeyCircular, to allow space for any circular links
   function scaleSankeySize(graph, margin) {
-
     var maxColumn = max(graph.nodes, function (node) {
       return node.column;
     });
@@ -411,7 +413,6 @@ function sankeyCircular () {
     }
 
     function initializeNodeBreadth(id) {
-
       //override py if nodePadding has been set
       if (paddingRatio) {
         var padding = Infinity;
@@ -667,7 +668,6 @@ function selectCircularLinkTypes(graph, id) {
 
 // Checks if link creates a cycle
 function createsCycle(originalSource, nodeToCheck, graph, id) {
-
   // Check for self linking nodes
   if (getNodeID(originalSource, id) == getNodeID(nodeToCheck, id)) {
     return true;
@@ -1073,7 +1073,6 @@ function linkPerpendicularYToLinkTarget(longerLink, shorterLink) {
 
 // Move any nodes that overlap links which span 2+ columns
 function resolveNodeLinkOverlaps(graph, y0, y1, id) {
-
   graph.links.forEach(function (link) {
     if (link.circular) {
       return;
@@ -1106,7 +1105,6 @@ function resolveNodeLinkOverlaps(graph, y0, y1, id) {
 
             // If top of link overlaps node, push node up
             if (linkY0AtColumn > node.y0 && linkY0AtColumn < node.y1) {
-
               var dy = node.y1 - linkY0AtColumn + 10;
               dy = node.circularLinkType == 'bottom' ? dy : -dy;
 
@@ -1399,7 +1397,6 @@ function selfLinking(link, id) {
 }
 
 function fillHeight(graph, y0, y1) {
-
   var nodes = graph.nodes;
   var links = graph.links;
 
@@ -1407,9 +1404,9 @@ function fillHeight(graph, y0, y1) {
   var bottom = false;
 
   links.forEach(function (link) {
-    if (link.circularLinkType == "top") {
+    if (link.circularLinkType == 'top') {
       top = true;
-    } else if (link.circularLinkType == "bottom") {
+    } else if (link.circularLinkType == 'bottom') {
       bottom = true;
     }
   });

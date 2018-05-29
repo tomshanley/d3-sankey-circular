@@ -38,8 +38,10 @@
   <div id="chart"></div>
 
   <script>
+    // attach functions from d3-sankey-circular to main d3 object 
     d3.sankeyCircular = sankeyCircular.sankeyCircular
-    console.log('d3 from example', d3)
+    d3.sankeyJustify = sankeyCircular.sankeyJustify
+    
     var margin = { top: 30, right: 30, bottom: 30, left: 30};
     var width = 1100;
     var height = 500;
@@ -92,7 +94,6 @@
 
     node.append("rect")
       .attr("x", function (d) { 
-        console.log('d from rect x', d)
         return d.x0; 
       })
       .attr("y", function (d) { return d.y0; })
