@@ -12,7 +12,8 @@ export default [
     input: 'src/index.js',
     output: {
       file: pkg.main,
-      name: 'sankeyCircular',
+      name: 'd3',
+      extend: true,
       format: 'umd',
       globals: {
         'd3-collection': 'd3',
@@ -41,7 +42,8 @@ export default [
       {
         file: pkg.module,
         format: 'es',
-        name: 'sankeyCircular',
+        name: 'd3',
+        extend: true,
         globals: {
           'd3-collection': 'd3',
           'd3-array': 'd3',
