@@ -41,7 +41,9 @@
     "build-node": "babel src --out-dir dist",
     "clean": "rimraf dist && mkdirp dist",
     "build": "npm run clean && npm run build-node",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "lint": "./node_modules/.bin/eslint src/",
+    "lint:fix": "./node_modules/.bin/eslint src/ --fix"
   },
   "keywords": [
     "d3"
