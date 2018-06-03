@@ -481,22 +481,24 @@ import {linkHorizontal} from "d3-shape";
       function relaxLeftAndRight (alpha, id) {
         var columnsLength = columns.length
 
-        columns.forEach(function (nodes, i) {
+        columns.forEach(function (nodes) {
           var n = nodes.length
           var depth = nodes[0].depth
 
           nodes.forEach(function (node) {
             // check the node is not an orphan
+            var nodeHeight
             if (node.sourceLinks.length || node.targetLinks.length) {
               if (node.partOfCycle && numberOfNonSelfLinkingCycles(node, id) > 0) {
 
+                /* empty */
               } else if (depth == 0 && n == 1) {
-                var nodeHeight = node.y1 - node.y0
+                nodeHeight = node.y1 - node.y0
 
                 node.y0 = y1 / 2 - nodeHeight / 2
                 node.y1 = y1 / 2 + nodeHeight / 2
               } else if (depth == columnsLength - 1 && n == 1) {
-                var nodeHeight = node.y1 - node.y0
+                nodeHeight = node.y1 - node.y0
 
                 node.y0 = y1 / 2 - nodeHeight / 2
                 node.y1 = y1 / 2 + nodeHeight / 2
@@ -550,7 +552,7 @@ import {linkHorizontal} from "d3-shape";
           // If the bottommost node goes outside the bounds, push it back up.
           dy = y - py - y1
           if (dy > 0) {
-            ;(y = node.y0 -= dy), (node.y1 -= dy)
+            (y = node.y0 -= dy), (node.y1 -= dy)
 
             // Push any overlapping nodes back up.
             for (i = n - 2; i >= 0; --i) {
@@ -830,12 +832,12 @@ import {linkHorizontal} from "d3-shape";
     var topLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'top'
     })
-    topLinks = calcVerticalBuffer(topLinks, circularLinkGap, id)
+    /* topLinks = */ calcVerticalBuffer(topLinks, circularLinkGap, id)
 
     var bottomLinks = graph.links.filter(function (l) {
       return l.circularLinkType == 'bottom'
     })
-    bottomLinks = calcVerticalBuffer(bottomLinks, circularLinkGap, id)
+    /* bottomLinks = */ calcVerticalBuffer(bottomLinks, circularLinkGap, id)
 
     // add the base data for each link
     graph.links.forEach(function (link) {
@@ -964,7 +966,8 @@ import {linkHorizontal} from "d3-shape";
   // create a d path using the addCircularPathData
   function createCircularPathString (link) {
     var pathString = ''
-    var pathData = {}
+    // 'pathData' is assigned a value but never used
+    // var pathData = {}
 
     if (link.circularLinkType == 'top') {
       pathString =
@@ -1254,11 +1257,12 @@ import {linkHorizontal} from "d3-shape";
 
               var linkY0AtColumn = py_t - (link.width / 2)
               var linkY1AtColumn = py_t + (link.width / 2)
+              var dy
 
               // If top of link overlaps node, push node up
               if (linkY0AtColumn > node.y0 && linkY0AtColumn < node.y1) {
 
-                var dy = node.y1 - linkY0AtColumn + 10
+                dy = node.y1 - linkY0AtColumn + 10
                 dy = node.circularLinkType == 'bottom' ? dy : -dy
 
                 node = adjustNodeHeight(node, dy, y0, y1)
@@ -1278,7 +1282,7 @@ import {linkHorizontal} from "d3-shape";
                 })
               } else if (linkY1AtColumn > node.y0 && linkY1AtColumn < node.y1) {
                 // If bottom of link overlaps node, push node down
-                var dy = linkY1AtColumn - node.y0 + 10
+                dy = linkY1AtColumn - node.y0 + 10
 
                 node = adjustNodeHeight(node, dy, y0, y1)
 
@@ -1297,7 +1301,7 @@ import {linkHorizontal} from "d3-shape";
                 })
               } else if (linkY0AtColumn < node.y0 && linkY1AtColumn > node.y1) {
                 // if link completely overlaps node
-                var dy = linkY1AtColumn - node.y0 + 10
+                dy = linkY1AtColumn - node.y0 + 10
 
                 node = adjustNodeHeight(node, dy, y0, y1)
 
