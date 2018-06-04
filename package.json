@@ -44,8 +44,10 @@
   },
   "scripts": {
     "clean": "rimraf dist && mkdirp dist",
-    "build": "npm run clean && npm run build-node",
-    "prepare": "npm run build",
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "build:clean": "npm run clean && npm run build",
+    "prepare": "npm run build:clean",
     "lint": "./node_modules/.bin/eslint src/",
     "lint:fix": "./node_modules/.bin/eslint src/ --fix"
   },
