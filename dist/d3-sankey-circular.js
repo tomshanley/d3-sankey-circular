@@ -89,14 +89,6 @@
     return nodeCenter(link.target);
   }
 
-  /* function weightedSource (link) {
-    return nodeCenter(link.source) * link.value
-  } */
-
-  /* function weightedTarget (link) {
-    return nodeCenter(link.target) * link.value
-  } */
-
   // Return the default value for ID for node, d.index
   function defaultId(d) {
     return d.index;
@@ -147,7 +139,8 @@
         links = defaultLinks,
         iterations = 32,
         circularLinkGap = 2,
-        paddingRatio;
+        paddingRatio,
+        sortNodes = null;
 
     function sankeyCircular() {
       var graph = {
@@ -160,7 +153,7 @@
       };computeNodeLinks(graph);
 
       // 2.  Determine which links result in a circular path in the graph
-      identifyCircles(graph, id);
+      identifyCircles(graph, id, sortNodes);
 
       // 4. Calculate the nodes' values, based on the values of the incoming and outgoing links
       computeNodeValues(graph);
@@ -184,7 +177,6 @@
 
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
       // 8.  Adjust nodes that overlap links that span 2+ columns
-
       var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
       for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
 
@@ -249,6 +241,10 @@
 
     sankeyCircular.nodePaddingRatio = function (_) {
       return arguments.length ? (paddingRatio = +_, sankeyCircular) : paddingRatio;
+    };
+
+    sankeyCircular.sortNodes = function (_) {
+      return arguments.length ? (sortNodes = _, sankeyCircular) : sortNodes;
     };
 
     // Populate the sourceLinks and targetLinks for each node.
@@ -608,19 +604,36 @@
   // portion of code to detect circular links based on Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043
 
   // Identify circles in the link objects
-  function identifyCircles(graph, id) {
+  function identifyCircles(graph, id, sortNodes) {
+
     var addedLinks = [];
     var circularLinkID = 0;
-    graph.links.forEach(function (link) {
-      if (createsCycle(link.source, link.target, addedLinks, id)) {
-        link.circular = true;
-        link.circularLinkID = circularLinkID;
-        circularLinkID = circularLinkID + 1;
-      } else {
-        link.circular = false;
-        addedLinks.push(link);
-      }
-    });
+
+    if (sortNodes === null) {
+
+      graph.links.forEach(function (link) {
+        if (createsCycle(link.source, link.target, addedLinks, id)) {
+          link.circular = true;
+          link.circularLinkID = circularLinkID;
+          circularLinkID = circularLinkID + 1;
+        } else {
+          link.circular = false;
+          addedLinks.push(link);
+        }
+      });
+    } else {
+
+      graph.links.forEach(function (link) {
+
+        if (link.source[sortNodes] < link.target[sortNodes]) {
+          link.circular = false;
+        } else {
+          link.circular = true;
+          link.circularLinkID = circularLinkID;
+          circularLinkID = circularLinkID + 1;
+        }
+      });
+    }
   }
 
   // Assign a circular link type (top or bottom), based on:
