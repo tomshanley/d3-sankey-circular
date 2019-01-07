@@ -245,6 +245,14 @@ function sankeyCircular () {
     return arguments.length ? (sortNodes = _, sankeyCircular) : sortNodes;
   };
 
+  sankeyCircular.update = function (graph) {
+    computeLinkBreadths(graph);
+
+    // 9. Calculate visually appealling path for the circular paths, and create the "d" string
+    addCircularPathData(graph, circularLinkGap, y1, id);
+    return graph;
+  };
+
   // Populate the sourceLinks and targetLinks for each node.
   // Also, if the source and target are not objects, assume they are indices.
   function computeNodeLinks(graph) {
@@ -910,7 +918,7 @@ function addCircularPathData(graph, circularLinkGap, y1, id) {
 
         // bottom links
         if (link.circularLinkType == 'bottom') {
-          link.circularPathData.verticalFullExtent = y1 + verticalMargin + link.circularPathData.verticalBuffer;
+          link.circularPathData.verticalFullExtent = Math.max(y1, link.source.y1, link.target.y1) + verticalMargin + link.circularPathData.verticalBuffer;
           link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius;
           link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius;
         } else {
