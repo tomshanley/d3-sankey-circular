@@ -275,8 +275,9 @@
       // computeNodeBreadths(graph, iterations, id)
       computeLinkBreadths(graph);
 
-      sortSourceLinks(graph, y1, id);
+      sortSourceLinks(graph, y1, id, false); // Sort links but do not move nodes
       sortTargetLinks(graph, y1, id);
+
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
       // 8.  Adjust nodes that overlap links that span 2+ columns
       // var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
@@ -1266,10 +1267,10 @@
   }
 
   // sort and set the links' y0 for each node
-  function sortSourceLinks(graph, y1, id) {
+  function sortSourceLinks(graph, y1, id, moveNodes) {
     graph.nodes.forEach(function (node) {
       // move any nodes up which are off the bottom
-      if (node.y + (node.y1 - node.y0) > y1) {
+      if (moveNodes && node.y + (node.y1 - node.y0) > y1) {
         node.y = node.y - (node.y + (node.y1 - node.y0) - y1);
       }
 
