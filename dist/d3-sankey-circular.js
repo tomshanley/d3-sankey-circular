@@ -275,6 +275,8 @@
       // computeNodeBreadths(graph, iterations, id)
       computeLinkBreadths(graph);
 
+      sortSourceLinks(graph, y1, id);
+      sortTargetLinks(graph, y1, id);
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
       // 8.  Adjust nodes that overlap links that span 2+ columns
       // var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
