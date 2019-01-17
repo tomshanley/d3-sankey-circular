@@ -149,7 +149,7 @@ import {linkHorizontal} from "d3-shape";
         sortTargetLinks(graph, y1, id)
 
       }
-      
+
       // 8.1  Adjust node and link positions back to fill height of chart area if compressed
       fillHeight(graph, y0, y1)
 
@@ -159,7 +159,7 @@ import {linkHorizontal} from "d3-shape";
       return graph
     } // end of sankeyCircular function
 
-    
+
     // Set the sankeyCircular parameters
     // nodeID, nodeAlign, nodeWidth, nodePadding, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
     sankeyCircular.nodeId = function (_) {
@@ -224,6 +224,60 @@ import {linkHorizontal} from "d3-shape";
       return arguments.length ? ((sortNodes = _), sankeyCircular) : sortNodes
     }
 
+    sankeyCircular.update = function(graph) {
+      // 5.  Calculate the nodes' depth based on the incoming and outgoing links
+      //     Sets the nodes':
+      //     - depth:  the depth in the graph
+      //     - column: the depth (0, 1, 2, etc), as is relates to visual position from left to right
+      //     - x0, x1: the x coordinates, as is relates to visual position from left to right
+      // computeNodeDepths(graph)
+
+      // Force position of circular link type based on position
+      graph.links.forEach(function (link) {
+        if (link.circular) {
+          link.circularLinkType = (link.y0 + link.y1 < y1)
+            ? 'top'
+            : 'bottom'
+
+          link.source.circularLinkType = link.circularLinkType
+          link.target.circularLinkType = link.circularLinkType
+        }
+      })
+
+      // 3.  Determine how the circular links will be drawn,
+      //     either travelling back above the main chart ("top")
+      //     or below the main chart ("bottom")
+      selectCircularLinkTypes(graph, id)
+
+      // 6.  Calculate the nodes' and links' vertical position within their respective column
+      //     Also readjusts sankeyCircular size if circular links are needed, and node x's
+      // computeNodeBreadths(graph, iterations, id)
+      computeLinkBreadths(graph)
+
+      sortSourceLinks(graph, y1, id, false) // Sort links but do not move nodes
+      sortTargetLinks(graph, y1, id)
+      
+      // 7.  Sort links per node, based on the links' source/target nodes' breadths
+      // 8.  Adjust nodes that overlap links that span 2+ columns
+      // var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
+      // for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
+      //
+      //   sortSourceLinks(graph, y1, id)
+      //   sortTargetLinks(graph, y1, id)
+      //   resolveNodeLinkOverlaps(graph, y0, y1, id)
+      //   sortSourceLinks(graph, y1, id)
+      //   sortTargetLinks(graph, y1, id)
+      //
+      // }
+
+      // 8.1  Adjust node and link positions back to fill height of chart area if compressed
+      // fillHeight(graph, y0, y1)
+
+      // 9. Calculate visually appealling path for the circular paths, and create the "d" string
+      addCircularPathData(graph, circularLinkGap, y1, id)
+      return graph
+    }
+
     // Populate the sourceLinks and targetLinks for each node.
     // Also, if the source and target are not objects, assume they are indices.
     function computeNodeLinks (graph) {
@@ -246,6 +300,7 @@ import {linkHorizontal} from "d3-shape";
         source.sourceLinks.push(link)
         target.targetLinks.push(link)
       })
+      return graph
     }
 
     // Compute the value (size) and cycleness of each node by summing the associated links.
@@ -293,7 +348,7 @@ import {linkHorizontal} from "d3-shape";
             totalLeftLinksWidth = totalLeftLinksWidth + link.width
           }
 
-          if (link.source.column == maxColumn) { 
+          if (link.source.column == maxColumn) {
             totalRightLinksWidth = totalRightLinksWidth + link.width
           }
         }
@@ -306,12 +361,12 @@ import {linkHorizontal} from "d3-shape";
       totalLeftLinksWidth = totalLeftLinksWidth > 0 ? totalLeftLinksWidth + verticalMargin + baseRadius : totalLeftLinksWidth;
 
       return { "top": totalTopLinksWidth, "bottom": totalBottomLinksWidth, "left": totalLeftLinksWidth, "right": totalRightLinksWidth }
-    
+
     }
 
     // Update the x0, y0, x1 and y1 for the sankeyCircular, to allow space for any circular links
     function scaleSankeySize (graph, margin) {
-      
+
       var maxColumn = max(graph.nodes, function (node) {
         return node.column
       })
@@ -324,7 +379,7 @@ import {linkHorizontal} from "d3-shape";
 
       var scaleX = currentWidth / newWidth;
       var scaleY = currentHeight / newHeight;
-      
+
       x0 = (x0 * scaleX) + (margin.left);
       x1 = margin.right == 0 ? x1 : x1 * scaleX;
       y0 = (y0 * scaleY) + (margin.top);
@@ -381,7 +436,7 @@ import {linkHorizontal} from "d3-shape";
         node.column = Math.floor(align.call(null, node, x))
       })
 
-     
+
     }
 
     // Assign nodes' breadths, and then shift nodes that overlap (resolveCollisions)
@@ -405,7 +460,7 @@ import {linkHorizontal} from "d3-shape";
       }
 
       function initializeNodeBreadth (id) {
-        
+
         //override py if nodePadding has been set
         if (paddingRatio) {
           var padding = Infinity
@@ -470,7 +525,7 @@ import {linkHorizontal} from "d3-shape";
           })
         })
 
-        
+
       }
 
       // For each node in each column, check the node's vertical position in relation to its targets and sources vertical position
@@ -625,7 +680,7 @@ import {linkHorizontal} from "d3-shape";
           addedLinks.push(link)
         }
       })
-      
+
     } else {
 
       graph.links.forEach(function(link) {
@@ -694,12 +749,12 @@ import {linkHorizontal} from "d3-shape";
 
   // Checks if link creates a cycle
   function createsCycle (originalSource, nodeToCheck, graph, id) {
-    
+
     // Check for self linking nodes
     if (getNodeID(originalSource, id) == getNodeID(nodeToCheck, id)) {
       return true
     }
-    
+
     if (graph.length == 0) {
       return false
     }
@@ -936,7 +991,7 @@ import {linkHorizontal} from "d3-shape";
 
           // bottom links
           if (link.circularLinkType == 'bottom') {
-            link.circularPathData.verticalFullExtent = y1 + verticalMargin + link.circularPathData.verticalBuffer
+            link.circularPathData.verticalFullExtent = Math.max(y1, link.source.y1, link.target.y1) + verticalMargin + link.circularPathData.verticalBuffer
             link.circularPathData.verticalLeftInnerExtent =  link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius
             link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius
           } else {
@@ -953,10 +1008,10 @@ import {linkHorizontal} from "d3-shape";
         link.circularPathData.leftFullExtent = link.circularPathData.sourceX + link.circularPathData.leftLargeArcRadius + link.circularPathData.leftNodeBuffer
         link.circularPathData.rightFullExtent = link.circularPathData.targetX - link.circularPathData.rightLargeArcRadius - link.circularPathData.rightNodeBuffer
 
-        
-        
-        
-        
+
+
+
+
       }
 
       if (link.circular) {
@@ -1375,10 +1430,10 @@ import {linkHorizontal} from "d3-shape";
   }
 
   // sort and set the links' y0 for each node
-  function sortSourceLinks (graph, y1, id) {
+  function sortSourceLinks (graph, y1, id, moveNodes) {
     graph.nodes.forEach(function (node) {
       // move any nodes up which are off the bottom
-      if (node.y + (node.y1 - node.y0) > y1) {
+      if (moveNodes && node.y + (node.y1 - node.y0) > y1) {
         node.y = node.y - (node.y + (node.y1 - node.y0) - y1)
       }
 
@@ -1591,7 +1646,7 @@ import {linkHorizontal} from "d3-shape";
   }
 
   function fillHeight(graph, y0, y1) {
-    
+
     var nodes = graph.nodes
     var links = graph.links
 
@@ -1605,28 +1660,25 @@ import {linkHorizontal} from "d3-shape";
         bottom = true
       }
     })
-    
+
     if (top == false || bottom == false) {
       var minY0 = min(nodes, function(node){ return node.y0 })
       var maxY1 = max(nodes, function(node){ return node.y1 })
       var currentHeight = maxY1 - minY0
       var chartHeight = y1 - y0
       var ratio = chartHeight/currentHeight
-      
+
       nodes.forEach(function(node){
         var nodeHeight = (node.y1 - node.y0) * ratio
         node.y0 = (node.y0 - minY0) * ratio
         node.y1 = node.y0 + nodeHeight
       })
-      
+
       links.forEach(function(link) {
         link.y0 = (link.y0 - minY0) * ratio
         link.y1 = (link.y1 - minY0) * ratio
         link.width = link.width * ratio
-      })  
+      })
     }
 
   }
-
-
-

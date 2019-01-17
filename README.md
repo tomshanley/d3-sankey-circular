@@ -2,7 +2,7 @@
 
 A fork of the d3-sankey library (https://github.com/d3/d3-sankey) to allow circular links (ie cyclic graphs, like in [this example](https://bl.ocks.org/tomshanley/6f3fcf68c0dbc401548733dd0c64e3c3)).
 
-The library contains a portion of code from Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043 to detect circular links. 
+The library contains a portion of code from Colin Fergus' bl.ock https://gist.github.com/cfergus/3956043 to detect circular links.
 
 ## Install
 
@@ -28,6 +28,15 @@ Computes the node and link positions for the given *arguments*, returning a *gra
 
 * *graph*.nodes - the array of [nodes](#sankey_nodes)
 * *graph*.links - the array of [links](#sankey_links)
+
+<a href="#sankey_update" name="sankey_update">#</a> <i>sankey</i>.<b>update</b>(<i>graph</i>) 
+
+Recomputes the specified *graph*’s links’ positions, updating the following properties of each *link*:
+
+* *link*.y0 - the link’s vertical starting position (at source node)
+* *link*.y1 - the link’s vertical end position (at target node)
+
+This method is intended to be called after computing the initial [Sankey layout](#_sankey), for example when the diagram is repositioned interactively.
 
 <a name="sankey_nodes" href="#sankey_nodes">#</a> <i>sankey</i>.<b>nodes</b>([<i>nodes</i>]) [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L93 "Source")
 
@@ -181,19 +190,19 @@ If *circularLinkGap* is specified, sets the gap (in pixels) between circular lin
 
 See [*sankey*.nodeAlign](#sankey_nodeAlign).
 
-<a name="sankeyLeft" href="#sankeyLeft">#</a> d3.<b>sankeyLeft</b>(<i>node</i>, <i>n</i>) 
+<a name="sankeyLeft" href="#sankeyLeft">#</a> d3.<b>sankeyLeft</b>(<i>node</i>, <i>n</i>)
 
 Returns *node*.depth.
 
-<a name="sankeyRight" href="#sankeyRight">#</a> d3.<b>sankeyRight</b>(<i>node</i>, <i>n</i>) 
+<a name="sankeyRight" href="#sankeyRight">#</a> d3.<b>sankeyRight</b>(<i>node</i>, <i>n</i>)
 
 Returns *n* - 1 - *node*.height.
 
-<a name="sankeyCenter" href="#sankeyCenter">#</a> d3.<b>sankeyCenter</b>(<i>node</i>, <i>n</i>) 
+<a name="sankeyCenter" href="#sankeyCenter">#</a> d3.<b>sankeyCenter</b>(<i>node</i>, <i>n</i>)
 
 Like [d3.sankeyLeft](#sankeyLeft), except that nodes without any incoming links are moved as right as possible.
 
-<a name="sankeyJustify" href="#sankeyJustify">#</a> d3.<b>sankeyJustify</b>(<i>node</i>, <i>n</i>) 
+<a name="sankeyJustify" href="#sankeyJustify">#</a> d3.<b>sankeyJustify</b>(<i>node</i>, <i>n</i>)
 
 Like [d3.sankeyLeft](#sankeyLeft), except that nodes without any outgoing links are moved to the far right.
 
@@ -212,7 +221,7 @@ svg.append("g")
     .selectAll("path");
     .data(sankey.links)
     .enter()
-    .append("path") 
+    .append("path")
         .attr("d", function(d){
           return d.path;
         })

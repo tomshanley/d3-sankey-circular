@@ -51,8 +51,12 @@
     "lint": "./node_modules/.bin/eslint src/",
     "lint:fix": "./node_modules/.bin/eslint src/ --fix"
   },
-  "files": ["dist"],
-  "keywords": ["d3"],
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "d3"
+  ],
   "bugs": {
     "url": "https://github.com/tomshanley/d3-sankey-circular/issues"
   },

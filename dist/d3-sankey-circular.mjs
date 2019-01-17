@@ -245,6 +245,58 @@ function sankeyCircular () {
     return arguments.length ? (sortNodes = _, sankeyCircular) : sortNodes;
   };
 
+  sankeyCircular.update = function (graph) {
+    // 5.  Calculate the nodes' depth based on the incoming and outgoing links
+    //     Sets the nodes':
+    //     - depth:  the depth in the graph
+    //     - column: the depth (0, 1, 2, etc), as is relates to visual position from left to right
+    //     - x0, x1: the x coordinates, as is relates to visual position from left to right
+    // computeNodeDepths(graph)
+
+    // Force position of circular link type based on position
+    graph.links.forEach(function (link) {
+      if (link.circular) {
+        link.circularLinkType = link.y0 + link.y1 < y1 ? 'top' : 'bottom';
+
+        link.source.circularLinkType = link.circularLinkType;
+        link.target.circularLinkType = link.circularLinkType;
+      }
+    });
+
+    // 3.  Determine how the circular links will be drawn,
+    //     either travelling back above the main chart ("top")
+    //     or below the main chart ("bottom")
+    selectCircularLinkTypes(graph, id);
+
+    // 6.  Calculate the nodes' and links' vertical position within their respective column
+    //     Also readjusts sankeyCircular size if circular links are needed, and node x's
+    // computeNodeBreadths(graph, iterations, id)
+    computeLinkBreadths(graph);
+
+    sortSourceLinks(graph, y1, id, false); // Sort links but do not move nodes
+    sortTargetLinks(graph, y1, id);
+
+    // 7.  Sort links per node, based on the links' source/target nodes' breadths
+    // 8.  Adjust nodes that overlap links that span 2+ columns
+    // var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
+    // for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
+    //
+    //   sortSourceLinks(graph, y1, id)
+    //   sortTargetLinks(graph, y1, id)
+    //   resolveNodeLinkOverlaps(graph, y0, y1, id)
+    //   sortSourceLinks(graph, y1, id)
+    //   sortTargetLinks(graph, y1, id)
+    //
+    // }
+
+    // 8.1  Adjust node and link positions back to fill height of chart area if compressed
+    // fillHeight(graph, y0, y1)
+
+    // 9. Calculate visually appealling path for the circular paths, and create the "d" string
+    addCircularPathData(graph, circularLinkGap, y1, id);
+    return graph;
+  };
+
   // Populate the sourceLinks and targetLinks for each node.
   // Also, if the source and target are not objects, assume they are indices.
   function computeNodeLinks(graph) {
@@ -267,6 +319,7 @@ function sankeyCircular () {
       source.sourceLinks.push(link);
       target.targetLinks.push(link);
     });
+    return graph;
   }
 
   // Compute the value (size) and cycleness of each node by summing the associated links.
@@ -910,7 +963,7 @@ function addCircularPathData(graph, circularLinkGap, y1, id) {
 
         // bottom links
         if (link.circularLinkType == 'bottom') {
-          link.circularPathData.verticalFullExtent = y1 + verticalMargin + link.circularPathData.verticalBuffer;
+          link.circularPathData.verticalFullExtent = Math.max(y1, link.source.y1, link.target.y1) + verticalMargin + link.circularPathData.verticalBuffer;
           link.circularPathData.verticalLeftInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.leftLargeArcRadius;
           link.circularPathData.verticalRightInnerExtent = link.circularPathData.verticalFullExtent - link.circularPathData.rightLargeArcRadius;
         } else {
@@ -1212,10 +1265,10 @@ function adjustNodeHeight(node, dy, sankeyY0, sankeyY1) {
 }
 
 // sort and set the links' y0 for each node
-function sortSourceLinks(graph, y1, id) {
+function sortSourceLinks(graph, y1, id, moveNodes) {
   graph.nodes.forEach(function (node) {
     // move any nodes up which are off the bottom
-    if (node.y + (node.y1 - node.y0) > y1) {
+    if (moveNodes && node.y + (node.y1 - node.y0) > y1) {
       node.y = node.y - (node.y + (node.y1 - node.y0) - y1);
     }
 
