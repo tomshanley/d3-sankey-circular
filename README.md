@@ -29,12 +29,13 @@ Computes the node and link positions for the given *arguments*, returning a *gra
 * *graph*.nodes - the array of [nodes](#sankey_nodes)
 * *graph*.links - the array of [links](#sankey_links)
 
-<a href="#sankey_update" name="sankey_update">#</a> <i>sankey</i>.<b>update</b>(<i>graph</i>) 
+<a href="#sankey_update" name="sankey_update">#</a> <i>sankey</i>.<b>update</b>(<i>graph</i>)
 
 Recomputes the specified *graph*’s links’ positions, updating the following properties of each *link*:
 
 * *link*.y0 - the link’s vertical starting position (at source node)
 * *link*.y1 - the link’s vertical end position (at target node)
+* *link*.circularLinkType - the link's circularLinkType either *top* or *bottom*, depending on whether the center of the connected nodes is above or below the vertical midpoint of the figure.
 
 This method is intended to be called after computing the initial [Sankey layout](#_sankey), for example when the diagram is repositioned interactively.
 

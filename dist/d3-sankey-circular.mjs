@@ -253,16 +253,6 @@ function sankeyCircular () {
     //     - x0, x1: the x coordinates, as is relates to visual position from left to right
     // computeNodeDepths(graph)
 
-    // Force position of circular link type based on position
-    graph.links.forEach(function (link) {
-      if (link.circular) {
-        link.circularLinkType = link.y0 + link.y1 < y1 ? 'top' : 'bottom';
-
-        link.source.circularLinkType = link.circularLinkType;
-        link.target.circularLinkType = link.circularLinkType;
-      }
-    });
-
     // 3.  Determine how the circular links will be drawn,
     //     either travelling back above the main chart ("top")
     //     or below the main chart ("bottom")
@@ -272,6 +262,16 @@ function sankeyCircular () {
     //     Also readjusts sankeyCircular size if circular links are needed, and node x's
     // computeNodeBreadths(graph, iterations, id)
     computeLinkBreadths(graph);
+
+    // Force position of circular link type based on position
+    graph.links.forEach(function (link) {
+      if (link.circular) {
+        link.circularLinkType = link.y0 + link.y1 < y1 ? 'top' : 'bottom';
+
+        link.source.circularLinkType = link.circularLinkType;
+        link.target.circularLinkType = link.circularLinkType;
+      }
+    });
 
     sortSourceLinks(graph, y1, id, false); // Sort links but do not move nodes
     sortTargetLinks(graph, y1, id);

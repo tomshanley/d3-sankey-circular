@@ -232,6 +232,16 @@ import {linkHorizontal} from "d3-shape";
       //     - x0, x1: the x coordinates, as is relates to visual position from left to right
       // computeNodeDepths(graph)
 
+      // 3.  Determine how the circular links will be drawn,
+      //     either travelling back above the main chart ("top")
+      //     or below the main chart ("bottom")
+      selectCircularLinkTypes(graph, id)
+
+      // 6.  Calculate the nodes' and links' vertical position within their respective column
+      //     Also readjusts sankeyCircular size if circular links are needed, and node x's
+      // computeNodeBreadths(graph, iterations, id)
+      computeLinkBreadths(graph)
+
       // Force position of circular link type based on position
       graph.links.forEach(function (link) {
         if (link.circular) {
@@ -244,19 +254,9 @@ import {linkHorizontal} from "d3-shape";
         }
       })
 
-      // 3.  Determine how the circular links will be drawn,
-      //     either travelling back above the main chart ("top")
-      //     or below the main chart ("bottom")
-      selectCircularLinkTypes(graph, id)
-
-      // 6.  Calculate the nodes' and links' vertical position within their respective column
-      //     Also readjusts sankeyCircular size if circular links are needed, and node x's
-      // computeNodeBreadths(graph, iterations, id)
-      computeLinkBreadths(graph)
-
       sortSourceLinks(graph, y1, id, false) // Sort links but do not move nodes
       sortTargetLinks(graph, y1, id)
-      
+
       // 7.  Sort links per node, based on the links' source/target nodes' breadths
       // 8.  Adjust nodes that overlap links that span 2+ columns
       // var linkSortingIterations = 4; //Possibly let user control this number, like the iterations over node placement
