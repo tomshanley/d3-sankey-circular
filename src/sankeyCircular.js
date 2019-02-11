@@ -1,11 +1,11 @@
-// https://github.com/tomshanley/d3-sankeyCircular-circular
+/// https://github.com/tomshanley/d3-sankeyCircular-circular
 // fork of https://github.com/d3/d3-sankeyCircular copyright Mike Bostock
 import {ascending, min, max, mean, sum} from "d3-array";
 import {map, nest} from "d3-collection";
 import {justify} from "./align";
 import constant from "./constant";
 import {linkHorizontal} from "d3-shape";
-
+import findCircuits from "elementary-circuits-directed-graph";
 
   // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
   function ascendingSourceBreadth (a, b) {
@@ -665,19 +665,63 @@ import {linkHorizontal} from "d3-shape";
   // Identify circles in the link objects
   function identifyCircles (graph, id, sortNodes) {
 
-    var addedLinks = []
     var circularLinkID = 0
 
     if (sortNodes === null) {
 
+      // Building adjacency graph
+      var adjList = []
+      for (var i = 0; i < graph.links.length; i++) {
+          var link = graph.links[i];
+          var source = getNodeID(link.source, id);
+          var target = getNodeID(link.target, id);
+          if (!adjList[source]) adjList[source] = []
+          if (!adjList[target]) adjList[target] = []
+
+          // Add links if not already in set
+          if (adjList[source].indexOf(target) === -1) adjList[source].push(target);
+      }
+
+      // Find all elementary circuits
+      var cycles = findCircuits(adjList);
+
+      // Sort by circuits length
+      cycles.sort(function(a, b){
+          return a.length - b.length;
+      });
+
+      // Make one link circular for each elementary circuit
+      var circularLinks = {};
+      for (i = 0; i < cycles.length; i++) {
+          var cycle = cycles[i];
+          var closed = false;
+          for (var j = 0; j < cycle.length - 1; j++){
+              if (!circularLinks[cycle[j]]) circularLinks[cycle[j]] = {};
+
+              // Check if there is already a circular link in the circuit
+              if (circularLinks[cycle[j]] && circularLinks[cycle[j]][cycle[j + 1]]) {
+                closed = true;
+                break;
+              }
+          }
+
+          if (!closed) {
+            // If not closed, make the last link the circular one
+            var last = cycle.slice(-2);
+            circularLinks[last[0]][last[1]] = true
+          }
+      }
+
       graph.links.forEach(function (link) {
-        if (createsCycle(link.source, link.target, addedLinks, id)) {
+        var target = getNodeID(link.target, id);
+        var source = getNodeID(link.source, id);
+        // If self-linking or a back-edge
+        if (target === source || (circularLinks[source] && circularLinks[source][target])) {
           link.circular = true
           link.circularLinkID = circularLinkID
           circularLinkID = circularLinkID + 1
         } else {
           link.circular = false
-          addedLinks.push(link)
         }
       })
 
@@ -745,42 +789,6 @@ import {linkHorizontal} from "d3-shape";
       }
     })
 
-  }
-
-  // Checks if link creates a cycle
-  function createsCycle (originalSource, nodeToCheck, graph, id) {
-
-    // Check for self linking nodes
-    if (getNodeID(originalSource, id) == getNodeID(nodeToCheck, id)) {
-      return true
-    }
-
-    if (graph.length == 0) {
-      return false
-    }
-
-    var nextLinks = findLinksOutward(nodeToCheck, graph)
-    // leaf node check
-    if (nextLinks.length == 0) {
-      return false
-    }
-
-    // cycle check
-    for (var i = 0; i < nextLinks.length; i++) {
-      var nextLink = nextLinks[i]
-
-      if (nextLink.target === originalSource) {
-        return true
-      }
-
-      // Recurse
-      if (createsCycle(originalSource, nextLink.target, graph, id)) {
-        return true
-      }
-    }
-
-    // Exhausted all links
-    return false
   }
 
   // Given a node, find all links for which this is a source in the current 'known' graph
