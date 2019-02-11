@@ -666,8 +666,8 @@ function identifyCircles(graph, id, sortNodes) {
     var adjList = [];
     for (var i = 0; i < graph.links.length; i++) {
       var link = graph.links[i];
-      var source = getNodeID(link.source, id);
-      var target = getNodeID(link.target, id);
+      var source = link.source.index;
+      var target = link.target.index;
       if (!adjList[source]) adjList[source] = [];
       if (!adjList[target]) adjList[target] = [];
 
@@ -706,8 +706,8 @@ function identifyCircles(graph, id, sortNodes) {
     }
 
     graph.links.forEach(function (link) {
-      var target = getNodeID(link.target, id);
-      var source = getNodeID(link.source, id);
+      var target = link.target.index;
+      var source = link.source.index;
       // If self-linking or a back-edge
       if (target === source || circularLinks[source] && circularLinks[source][target]) {
         link.circular = true;
@@ -718,9 +718,7 @@ function identifyCircles(graph, id, sortNodes) {
       }
     });
   } else {
-
     graph.links.forEach(function (link) {
-
       if (link.source[sortNodes] < link.target[sortNodes]) {
         link.circular = false;
       } else {
