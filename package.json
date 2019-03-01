@@ -9,7 +9,7 @@
     "url": "git+https://github.com/tomshanley/d3-sankey-circular.git"
   },
   "main": "dist/d3-sankey-circular.js",
-  "module": "dist/d3-sankey-circular.mjs",
+  "module": "dist/d3-sankey-circular.es.js",
   "dependencies": {
     "d3-array": "^1.2.1",
     "d3-collection": "^1.0.4",
