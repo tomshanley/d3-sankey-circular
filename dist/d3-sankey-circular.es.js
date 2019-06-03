@@ -657,9 +657,7 @@ function sankeyCircular () {
 
 // Identify circles in the link objects
 function identifyCircles(graph, id, sortNodes) {
-
   var circularLinkID = 0;
-
   if (sortNodes === null) {
 
     // Building adjacency graph
@@ -683,26 +681,12 @@ function identifyCircles(graph, id, sortNodes) {
       return a.length - b.length;
     });
 
-    // Make one link circular for each elementary circuit
     var circularLinks = {};
     for (i = 0; i < cycles.length; i++) {
       var cycle = cycles[i];
-      var closed = false;
-      for (var j = 0; j < cycle.length - 1; j++) {
-        if (!circularLinks[cycle[j]]) circularLinks[cycle[j]] = {};
-
-        // Check if there is already a circular link in the circuit
-        if (circularLinks[cycle[j]] && circularLinks[cycle[j]][cycle[j + 1]]) {
-          closed = true;
-          break;
-        }
-      }
-
-      if (!closed) {
-        // If not closed, make the last link the circular one
-        var last = cycle.slice(-2);
-        circularLinks[last[0]][last[1]] = true;
-      }
+      var last = cycle.slice(-2);
+      if (!circularLinks[last[0]]) circularLinks[last[0]] = {};
+      circularLinks[last[0]][last[1]] = true;
     }
 
     graph.links.forEach(function (link) {
