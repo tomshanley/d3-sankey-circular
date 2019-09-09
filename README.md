@@ -187,6 +187,10 @@ If *iterations* is specified, sets the number of relaxation iterations when [gen
 
 If *circularLinkGap* is specified, sets the gap (in pixels) between circular links that travel next to each other. If *circularLinkGap*, it defaults to 2.
 
+<a name="sankey_circularNodeSort" href="#sankey_circularNodeSort">#</a> <i>sankey</i>.<b>nodeSort</b>([<i>nodeSort</i>]) [<>](https://github.com/d3/d3-sankey/blob/master/src/sankey.js#L151 "Source")  
+If *nodeSort* is specified, sets the node sort method and returns this Sankey generator. If *sort* is not specified, returns the current node sort method, which defaults to *undefined*, indicating that vertical order of nodes within each column will be determined automatically by the layout. If *sort* is null, the order is fixed by the input. Otherwise, the specified *sort* function determines the order; the function is passed two nodes, and must return a value less than 0 if the first node should be above the second, and a value greater than 0 if the second node should be above the first, or 0 if the order is not specified.  
+Sorting is only applied to nodes that both part or not part of a circular loop. When the result of a nodeSort is 0 then nodes are sorted by the top (y0) of the node
+
 ### Alignments
 
 See [*sankey*.nodeAlign](#sankey_nodeAlign).
