@@ -1487,4 +1487,4 @@ function fillHeight(graph, y0, y1) {
   }
 }
 
-export { sankeyCircular, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
+export { sankeyCircular, addCircularPathData, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
