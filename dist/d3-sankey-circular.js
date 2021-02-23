@@ -443,7 +443,7 @@
 
       // assign column numbers, and get max value
       graph.nodes.forEach(function (node) {
-        node.column = Math.floor(align.call(null, node, x));
+        node.column = sortNodes !== null ? node[sortNodes] : Math.floor(align.call(null, node, x));
       });
     }
 
