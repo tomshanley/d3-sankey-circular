@@ -186,7 +186,10 @@ function sankeyCircular () {
       sortTargetLinks(graph, y1, id);
     }
 
-    // 8.1  Adjust node and link positions back to fill height of chart area if compressed
+    // 8.1  Fix nodes overlapping after sortNodes
+    resolveNodesOverlap(graph, y0, py);
+
+    // 8.2  Adjust node and link positions back to fill height of chart area if compressed
     fillHeight(graph, y0, y1);
 
     // 9. Calculate visually appealling path for the circular paths, and create the "d" string
@@ -1485,6 +1488,41 @@ function fillHeight(graph, y0, y1) {
       link.width = link.width * ratio;
     });
   }
+}
+
+function resolveNodesOverlap(graph, y0, py) {
+  var columns = nest().key(function (d) {
+    return d.column;
+  }).sortKeys(ascending).entries(graph.nodes).map(function (d) {
+    return d.values;
+  });
+
+  columns.forEach(function (nodes) {
+    var node,
+        dy,
+        y = y0,
+        n = nodes.length,
+        i;
+    // Push any overlapping nodes down.
+    nodes.sort(ascendingBreadth);
+
+    for (i = 0; i < n; ++i) {
+      node = nodes[i];
+      dy = y - node.y0;
+
+      if (dy > 0) {
+        node.y0 += dy;
+        node.y1 += dy;
+        node.targetLinks.forEach(function (l) {
+          l.y1 = l.y1 + dy;
+        });
+        node.sourceLinks.forEach(function (l) {
+          l.y0 = l.y0 + dy;
+        });
+      }
+      y = node.y1 + py;
+    }
+  });
 }
 
 export { sankeyCircular, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
