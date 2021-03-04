@@ -535,44 +535,28 @@
 
       // For each node in each column, check the node's vertical position in relation to its targets and sources vertical position
       // and shift up/down to be closer to the vertical middle of those targets and sources
-      function relaxLeftAndRight(alpha, id) {
-        var columnsLength = columns.length;
-
+      function relaxLeftAndRight(alpha) {
         columns.forEach(function (nodes) {
-          var n = nodes.length;
-          var depth = nodes[0].depth;
-
           nodes.forEach(function (node) {
             // check the node is not an orphan
             var nodeHeight;
             if (node.sourceLinks.length || node.targetLinks.length) {
-              if (node.partOfCycle && numberOfNonSelfLinkingCycles(node, id) > 0) ; else if (depth == 0 && n == 1) {
-                nodeHeight = node.y1 - node.y0;
+              nodeHeight = node.y1 - node.y0;
+              node.y0 = y1 / 2 - nodeHeight / 2;
+              node.y1 = y1 / 2 + nodeHeight / 2;
+              var avg = 0;
 
-                node.y0 = y1 / 2 - nodeHeight / 2;
-                node.y1 = y1 / 2 + nodeHeight / 2;
-              } else if (depth == columnsLength - 1 && n == 1) {
-                nodeHeight = node.y1 - node.y0;
-
-                node.y0 = y1 / 2 - nodeHeight / 2;
-                node.y1 = y1 / 2 + nodeHeight / 2;
+              var avgTargetY = d3Array.mean(node.sourceLinks, linkTargetCenter);
+              var avgSourceY = d3Array.mean(node.targetLinks, linkSourceCenter);
+              if (avgTargetY && avgSourceY) {
+                avg = (avgTargetY + avgSourceY) / 2;
               } else {
-                var avg = 0;
-
-                var avgTargetY = d3Array.mean(node.sourceLinks, linkTargetCenter);
-                var avgSourceY = d3Array.mean(node.targetLinks, linkSourceCenter);
-
-                if (avgTargetY && avgSourceY) {
-                  avg = (avgTargetY + avgSourceY) / 2;
-                } else {
-                  avg = avgTargetY || avgSourceY;
-                }
-
-                var dy = (avg - nodeCenter(node)) * alpha;
-                // positive if it node needs to move down
-                node.y0 += dy;
-                node.y1 += dy;
+                avg = avgTargetY || avgSourceY;
               }
+              var dy = (avg - nodeCenter(node)) * alpha;
+              // positive if it node needs to move down
+              node.y0 += dy;
+              node.y1 += dy;
             }
           });
         });
