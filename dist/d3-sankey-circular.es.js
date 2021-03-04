@@ -1490,6 +1490,7 @@ function fillHeight(graph, y0, y1) {
   }
 }
 
+
 function resolveNodesOverlap(graph, y0, py) {
   var columns = nest().key(function (d) {
     return d.column;
@@ -1525,4 +1526,5 @@ function resolveNodesOverlap(graph, y0, py) {
   });
 }
 
-export { sankeyCircular, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
+export { sankeyCircular, addCircularPathData, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
+

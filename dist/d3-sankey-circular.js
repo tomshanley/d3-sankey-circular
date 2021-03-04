@@ -1529,6 +1529,7 @@
   }
 
   exports.sankeyCircular = sankeyCircular;
+  exports.addCircularPathData = addCircularPathData;
   exports.sankeyCenter = center;
   exports.sankeyLeft = left;
   exports.sankeyRight = right;

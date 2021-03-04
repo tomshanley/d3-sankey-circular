@@ -875,7 +875,7 @@ import findCircuits from "elementary-circuits-directed-graph";
   }
 
   // calculate the optimum path for a link to reduce overlaps
-  function addCircularPathData (graph, circularLinkGap, y1, id) {
+ export function addCircularPathData (graph, circularLinkGap, y1, id) {
     //var baseRadius = 10
     var buffer = 5
     //var verticalMargin = 25
