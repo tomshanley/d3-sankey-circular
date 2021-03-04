@@ -43,31 +43,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 /// https://github.com/tomshanley/d3-sankeyCircular-circular
 
-// sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
-function ascendingSourceBreadth(a, b) {
-  return ascendingBreadth(a.source, b.source) || a.index - b.index;
-}
-
-// sort links' breadth (ie top to bottom in a column), based on their target nodes' breadths
-function ascendingTargetBreadth(a, b) {
-  return ascendingBreadth(a.target, b.target) || a.index - b.index;
-}
-
-// sort nodes' breadth (ie top to bottom in a column)
-// if both nodes have circular links, or both don't have circular links, then sort by the top (y0) of the node
-// else push nodes that have top circular links to the top, and nodes that have bottom circular links to the bottom
-function ascendingBreadth(a, b) {
-  if (a.partOfCycle === b.partOfCycle) {
-    return a.y0 - b.y0;
-  } else {
-    if (a.circularLinkType === 'top' || b.circularLinkType === 'bottom') {
-      return -1;
-    } else {
-      return 1;
-    }
-  }
-}
-
 // return the value of a node or link
 function value(d) {
   return d.value;
@@ -139,7 +114,8 @@ function sankeyCircular () {
       iterations = 32,
       circularLinkGap = 2,
       paddingRatio,
-      sortNodes = null;
+      sortNodes = null,
+      nodeSort = null;
 
   function sankeyCircular() {
     var graph = {
@@ -198,6 +174,31 @@ function sankeyCircular () {
     return graph;
   } // end of sankeyCircular function
 
+  // sort links' breadth (ie top to bottom in a column), based on their source nodes' breadths
+  function ascendingSourceBreadth(a, b) {
+    return ascendingBreadth(a.source, b.source) || a.index - b.index;
+  }
+
+  // sort links' breadth (ie top to bottom in a column), based on their target nodes' breadths
+  function ascendingTargetBreadth(a, b) {
+    return ascendingBreadth(a.target, b.target) || a.index - b.index;
+  }
+
+  // sort nodes' breadth (ie top to bottom in a column)
+  // if both nodes have circular links, or both don't have circular links, then sort by the top (y0) of the node
+  // else push nodes that have top circular links to the top, and nodes that have bottom circular links to the bottom
+  function ascendingBreadth(a, b) {
+    if (a.partOfCycle === b.partOfCycle) {
+      if (nodeSort) return nodeSort(a, b) || a.y0 - b.y0;
+      return a.y0 - b.y0;
+    } else {
+      if (a.circularLinkType === 'top' || b.circularLinkType === 'bottom') {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+  }
 
   // Set the sankeyCircular parameters
   // nodeID, nodeAlign, nodeWidth, nodePadding, nodes, links, size, extent, iterations, nodePaddingRatio, circularLinkGap
@@ -247,6 +248,10 @@ function sankeyCircular () {
 
   sankeyCircular.sortNodes = function (_) {
     return arguments.length ? (sortNodes = _, sankeyCircular) : sortNodes;
+  };
+
+  sankeyCircular.nodeSort = function (_) {
+    return arguments.length ? (nodeSort = _, sankeyCircular) : nodeSort;
   };
 
   sankeyCircular.update = function (graph) {
