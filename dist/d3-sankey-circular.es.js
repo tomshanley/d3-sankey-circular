@@ -410,7 +410,7 @@ function sankeyCircular () {
     y1 = y1 * scaleY;
 
     graph.nodes.forEach(function (node) {
-      node.x0 = x0 + node.column * ((x1 - x0 - dx) / maxColumn);
+      node.x0 = maxColumn > 0 ? x0 + node.column * ((x1 - x0 - dx) / maxColumn) : x0;
       node.x1 = node.x0 + dx;
     });
 
@@ -1479,7 +1479,6 @@ function fillHeight(graph, y0, y1) {
   }
 }
 
-
 function resolveNodesOverlap(graph, y0, py) {
   var columns = nest().key(function (d) {
     return d.column;
@@ -1516,4 +1515,3 @@ function resolveNodesOverlap(graph, y0, py) {
 }
 
 export { sankeyCircular, addCircularPathData, center as sankeyCenter, left as sankeyLeft, right as sankeyRight, justify as sankeyJustify };
-

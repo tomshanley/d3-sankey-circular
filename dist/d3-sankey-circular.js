@@ -413,7 +413,7 @@
       y1 = y1 * scaleY;
 
       graph.nodes.forEach(function (node) {
-        node.x0 = x0 + node.column * ((x1 - x0 - dx) / maxColumn);
+        node.x0 = maxColumn > 0 ? x0 + node.column * ((x1 - x0 - dx) / maxColumn) : x0;
         node.x1 = node.x0 + dx;
       });
 
